@@ -58,7 +58,9 @@ class DistributedLock:
                     new_timeout_ms = timeout_seconds * 1000
                     db.execute(text(f"SET LOCAL lock_timeout = '{new_timeout_ms}ms'"))
                     logger.debug(
-                        f'Set LOCAL lock_timeout to {new_timeout_ms}ms for lock {self.lock_id}'
+                        'Set LOCAL lock_timeout to %sms for lock %s',
+                        new_timeout_ms,
+                        self.lock_id,
                     )
 
                     # Try to acquire the advisory lock (will respect lock_timeout)
@@ -73,7 +75,9 @@ class DistributedLock:
                             text(f"SET LOCAL lock_timeout = '{original_lock_timeout}'")
                         )
                         logger.debug(
-                            f'Reset LOCAL lock_timeout to {original_lock_timeout} for lock {self.lock_id}'
+                            'Reset LOCAL lock_timeout to %s for lock %s',
+                            original_lock_timeout,
+                            self.lock_id,
                         )
 
             else:
@@ -96,14 +100,14 @@ class DistributedLock:
                 # or a custom LockAcquisitionError could be used.
                 raise TimeoutError(error_message)
 
-            logger.debug(f'Acquired lock {self.lock_id}')
+            logger.debug('Acquired lock %s', self.lock_id)
             yield
 
         finally:
             if acquired:
                 # Release the lock
                 db.execute(text(f'SELECT pg_advisory_unlock({self.lock_id})'))
-                logger.debug(f'Released lock {self.lock_id}')
+                logger.debug('Released lock %s', self.lock_id)
 
             # Ensure timeout is reset if acquisition failed before yield but after setting timeout
             elif original_lock_timeout is not None:
@@ -112,8 +116,10 @@ class DistributedLock:
                         text(f"SET LOCAL lock_timeout = '{original_lock_timeout}'")
                     )
                     logger.debug(
-                        f'Reset LOCAL lock_timeout to {original_lock_timeout} after failed acquisition for lock {self.lock_id}'
+                        'Reset LOCAL lock_timeout to %s after failed acquisition for lock %s',
+                        original_lock_timeout,
+                        self.lock_id,
                     )
                 except Exception as e:
                     # Log error if resetting timeout fails, but don't overshadow original error
-                    logger.error(f'Failed to reset lock_timeout: {e}')
+                    logger.error('Failed to reset lock_timeout: %s', e)

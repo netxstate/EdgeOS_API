@@ -19,7 +19,7 @@ def search_attendees_by_email(
 ):
     if x_api_key != settings.ATTENDEES_API_KEY:
         raise HTTPException(status_code=403, detail='Invalid API key')
-    logger.info(f'Searching for attendees by email: {email}')
+    logger.info('Searching for attendees by email: %s', email)
     attendees = attendee_crud.get_by_email(db=db, email=email)
     if not attendees:
         raise HTTPException(

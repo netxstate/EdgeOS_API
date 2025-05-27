@@ -41,7 +41,7 @@ def create_payment(
     simplefi_api_key: str,
     reference: Optional[dict] = None,
 ) -> dict:
-    logger.info(f'Creating payment for amount: {amount}')
+    logger.info('Creating payment for amount: %s', amount)
     notification_url = urllib.parse.urljoin(settings.BACKEND_URL, 'webhooks/simplefi')
     body = {
         'amount': amount,
