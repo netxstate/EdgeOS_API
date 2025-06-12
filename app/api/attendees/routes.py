@@ -57,7 +57,7 @@ def get_tickets(
     if x_api_key not in valid_keys:
         # 2) Check dynamic keys
         db_key = ticket_api_key_crud.get_by_key(db, x_api_key)
-        if not db_key or db_key.email.lower() != email.lower():
+        if not db_key:
             raise HTTPException(status_code=403, detail='Invalid API key')
 
     attendees = attendee_crud.get_by_email(db=db, email=email)
