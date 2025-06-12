@@ -6,6 +6,7 @@ Welcome to the documentation for EdgeOS, a FastAPI-based application that provid
 
 | Guide | Description |
 |-------|-------------|
+| [Repository Structure](./repository_structure.md) | Guide to the codebase structure for developers adding new integrations |
 | [NocoDB Setup](./nocodb_setup.md) | Connect and configure NocoDB for database management |
 | [NocoDB Webhooks](./nocodb_webhooks.md) | Configure and manage NocoDB webhooks for application status notifications |
 | [Status Calculation Logic](./status_calculation.md) | Detailed explanation of application status and discount determination |
