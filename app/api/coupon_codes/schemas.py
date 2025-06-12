@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, field_validator
 
 
@@ -16,7 +18,7 @@ class CouponCodeCreate(BaseModel):
     code: str
     popup_city_id: int
     discount_value: int
-    max_uses: int
+    max_uses: Optional[int] = None
     is_active: bool = True
 
     @field_validator('discount_value')
