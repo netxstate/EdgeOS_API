@@ -84,4 +84,23 @@ class CRUDAttendees(
             raise e
 
 
+class CRUDTicketApiKey(
+    CRUDBase[
+        models.AttendeeTicketApiKey,
+        schemas.TicketApiKeyCreate,
+        schemas.TicketApiKeyCreate,
+    ]
+):
+    """CRUD helpers for AttendeeTicketApiKey model"""
+
+    def get_by_key(
+        self, db: Session, key: str
+    ) -> Optional[models.AttendeeTicketApiKey]:
+        return db.query(self.model).filter(self.model.key == key).first()
+
+    def get_by_email(self, db: Session, email: str):
+        return db.query(self.model).filter(self.model.email == email).all()
+
+
 attendee = CRUDAttendees(models.Attendee)
+ticket_api_key_crud = CRUDTicketApiKey(models.AttendeeTicketApiKey)

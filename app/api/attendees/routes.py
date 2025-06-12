@@ -1,8 +1,11 @@
+import secrets
+
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.attendees import schemas
 from app.api.attendees.crud import attendee as attendee_crud
+from app.api.attendees.crud import ticket_api_key_crud
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.logger import logger
@@ -34,6 +37,14 @@ def get_tickets(
     x_api_key: str = Header(...),
     db: Session = Depends(get_db),
 ):
+    """Return tickets for the attendee email.
+
+    Authentication rules:
+    1. A static key defined in settings (for backward compatibility).
+    2. A dynamic key stored in `attendee_ticket_api_keys` table **matching the same email**.
+    """
+
+    # 1) Static keys from settings (legacy support)
     valid_keys = [
         k
         for k in [
@@ -42,8 +53,12 @@ def get_tickets(
         ]
         if k
     ]
+
     if x_api_key not in valid_keys:
-        raise HTTPException(status_code=403, detail='Invalid API key')
+        # 2) Check dynamic keys
+        db_key = ticket_api_key_crud.get_by_key(db, x_api_key)
+        if not db_key or db_key.email.lower() != email.lower():
+            raise HTTPException(status_code=403, detail='Invalid API key')
 
     attendees = attendee_crud.get_by_email(db=db, email=email)
 
@@ -78,3 +93,35 @@ def get_tickets(
             )
         )
     return response
+
+
+# ---------------------------------------------------------------------------
+# API Key generation for /attendees/tickets
+# ---------------------------------------------------------------------------
+
+
+@router.post('/tickets/api-keys', response_model=schemas.TicketApiKeyResponse)
+def generate_ticket_api_key(
+    payload: schemas.TicketApiKeyCreate,
+    x_api_key: str = Header(...),
+    db: Session = Depends(get_db),
+):
+    """Generate a one-off API key linked to an email.
+
+    The caller must provide a valid admin ATTENDEES_MANAGEMENT_API_KEY via the `X-API-Key` header.
+    The generated key will later be used to authenticate calls to `/attendees/tickets`.
+    """
+
+    if x_api_key != settings.ATTENDEES_MANAGEMENT_API_KEY:
+        raise HTTPException(status_code=403, detail='Invalid API key')
+
+    # Generate a secure random token
+    api_key = secrets.token_urlsafe(32)
+
+    # Persist the key
+    ticket_api_key_crud.create(
+        db=db,
+        obj=schemas.TicketApiKeyCreate(email=payload.email, key=api_key),
+    )
+
+    return schemas.TicketApiKeyResponse(email=payload.email, api_key=api_key)

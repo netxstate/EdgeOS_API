@@ -85,3 +85,17 @@ class AttendeeFilter(BaseModel):
     name: Optional[str] = None
     category: Optional[str] = None
     email: Optional[str] = None
+
+
+class TicketApiKeyCreate(BaseModel):
+    """Payload for generating a new API key linked to an email."""
+
+    email: str
+    key: Optional[str] = None
+
+
+class TicketApiKeyResponse(BaseModel):
+    """Response with the newly generated API key."""
+
+    email: str
+    api_key: str

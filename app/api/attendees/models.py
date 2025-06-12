@@ -68,3 +68,14 @@ class Attendee(Base):
             if attendee_product.product_id == product_id:
                 return attendee_product.quantity
         return 0
+
+
+class AttendeeTicketApiKey(Base):
+    """API keys to allow attendees retrieve their tickets via /attendees/tickets endpoint"""
+
+    __tablename__ = 'attendee_ticket_api_keys'
+
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    email = Column(String, nullable=False, index=True)
+    key = Column(String, unique=True, nullable=False, index=True)
+    created_at = Column(DateTime, default=current_time)
