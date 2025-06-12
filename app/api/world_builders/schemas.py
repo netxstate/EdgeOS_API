@@ -8,6 +8,7 @@ class WorldBuilderBase(BaseModel):
     first_name: str
     last_name: str
     email: str
+    world_address: str
     phone: Optional[str] = None
     location: Optional[str] = None
     personal_links: Optional[str] = None
