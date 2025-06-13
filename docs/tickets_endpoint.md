@@ -4,13 +4,23 @@
 This endpoint is used to retrieve tickets associated with a specific attendee's email.
 
 ### How should I use it?
-To use this endpoint, you need to send a GET request with the following:
+To use this endpoint, you need to send a GET request to:
+
+**URL:** `https://api-citizen-portal.simplefi.tech/attendees/tickets`
+
+With the following parameters:
 
 - **Query Parameter:**
   - `email` (string, required): The email of the attendee whose tickets you want to retrieve.
 
 - **Header:**
   - `X-API-Key` (string, required): Your API key for authentication.
+
+### Example using curl
+```bash
+curl -X GET "https://api-citizen-portal.simplefi.tech/attendees/tickets?email=alex.smith@example.com" \
+  -H "X-API-Key: your-api-key-here"
+```
 
 ### How can I get an API KEY?
 To obtain an API key, please send an email to [mateo@simplefi.tech](mailto:mateo@simplefi.tech) with your request.
