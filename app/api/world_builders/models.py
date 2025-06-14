@@ -18,6 +18,7 @@ class WorldBuilder(Base):
     world_address = Column(String, nullable=False)
     first_name = Column(String)
     last_name = Column(String)
+    builder_score = Column(Integer, default=0)
     phone = Column(String)
     location = Column(String)
     personal_links = Column(String)
