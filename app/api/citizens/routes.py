@@ -1,7 +1,9 @@
 from typing import Optional
+from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import EmailStr
+from pydantic import validate_email
+from pydantic_core import PydanticCustomError
 from sqlalchemy.orm import Session
 
 from app.api.citizens import schemas
@@ -38,11 +40,17 @@ def authenticate(
 
 @router.post('/login')
 def login(
-    email: EmailStr,
+    email: str,
     spice: Optional[str] = None,
     code: Optional[int] = None,
     db: Session = Depends(get_db),
 ):
+    try:
+        decoded_email = unquote(email)
+        email = validate_email(decoded_email)
+    except PydanticCustomError:
+        raise HTTPException(status_code=400, detail='Invalid email format')
+
     logger.info('Logging in citizen: %s', email)
     if not spice and not code:
         logger.error('Either spice or code must be provided')
@@ -92,9 +100,15 @@ def get_citizen(
 
 @router.get('/email/{email}', response_model=schemas.Citizen)
 def get_citizen_by_email(
-    email: EmailStr,
+    email: str,
     db: Session = Depends(get_db),
 ):
+    try:
+        decoded_email = unquote(email)
+        email = validate_email(decoded_email)
+    except PydanticCustomError:
+        raise HTTPException(status_code=400, detail='Invalid email')
+
     citizen = citizen_crud.get_by_email(db=db, email=email)
     if not citizen:
         raise HTTPException(status_code=404, detail='Citizen not found')
