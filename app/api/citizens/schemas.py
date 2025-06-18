@@ -2,11 +2,11 @@ from datetime import datetime
 from typing import List, Optional
 from urllib.parse import unquote
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class Authenticate(BaseModel):
-    email: str
+    email: EmailStr
     popup_slug: Optional[str] = None
     use_code: Optional[bool] = False
 
@@ -49,7 +49,7 @@ class CitizenBase(BaseModel):
 
 
 class CitizenCreate(CitizenBase):
-    pass
+    primary_email: EmailStr
 
 
 class InternalCitizenCreate(CitizenCreate):

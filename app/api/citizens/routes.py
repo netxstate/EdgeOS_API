@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
 from app.api.citizens import schemas
@@ -37,7 +38,7 @@ def authenticate(
 
 @router.post('/login')
 def login(
-    email: str,
+    email: EmailStr,
     spice: Optional[str] = None,
     code: Optional[int] = None,
     db: Session = Depends(get_db),
@@ -91,7 +92,7 @@ def get_citizen(
 
 @router.get('/email/{email}', response_model=schemas.Citizen)
 def get_citizen_by_email(
-    email: str,
+    email: EmailStr,
     db: Session = Depends(get_db),
 ):
     citizen = citizen_crud.get_by_email(db=db, email=email)
