@@ -41,10 +41,12 @@ def _generate_authenticate_url(
         },
         expires_delta=timedelta(hours=3),
     )
-    frontend_url = settings.FRONTEND_URL
     if world_app:
-        frontend_url = settings.WORLD_APP_URL
-    auth_url = urllib.parse.urljoin(frontend_url, f'/auth?token_url={token_url}')
+        auth_url = settings.WORLD_APP_URL + f'/auth?token_url={token_url}'
+    else:
+        auth_url = urllib.parse.urljoin(
+            settings.FRONTEND_URL, f'/auth?token_url={token_url}'
+        )
     if popup_slug:
         auth_url += f'&popup={popup_slug}'
     return auth_url
