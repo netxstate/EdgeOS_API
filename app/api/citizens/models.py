@@ -57,6 +57,7 @@ class Citizen(Base):
     age = Column(String)
     gender = Column(String)
     eth_address = Column(String)
+    world_address = Column(String)
     referral = Column(String)
 
     email_validated = Column(Boolean, default=False)

@@ -18,6 +18,7 @@ from app.core.locks import DistributedLock
 from app.core.logger import logger
 from app.core.security import SYSTEM_TOKEN, TokenData
 from app.core.utils import create_spice, current_time
+from app.core.world import verify_safe_signature
 
 POAP_TOKEN_ID = 'poap'
 POAP_REFRESH_LOCK = DistributedLock('poap_token_refresh')
@@ -153,17 +154,29 @@ class CRUDCitizen(
         email: str,
         popup_slug: Optional[str] = None,
         use_code: bool = False,
+        signature: Optional[str] = None,
+        world_address: Optional[str] = None,
     ) -> models.Citizen:
         citizen = self.get_by_email(db, email)
 
         code = random.randint(100000, 999999) if use_code else None
         code_expiration = current_time() + timedelta(minutes=5) if use_code else None
 
+        if signature and world_address:
+            if not verify_safe_signature(world_address, signature):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail='Invalid signature',
+                )
+        else:
+            world_address = None
+
         if not citizen:
             to_create = schemas.InternalCitizenCreate(
                 primary_email=email,
                 code=code,
                 code_expiration=code_expiration,
+                world_address=world_address,
             )
             citizen = self.create(db, to_create)
         else:

@@ -48,6 +48,7 @@ class Settings:
     CHECK_IN_API_KEY: str = os.getenv('CHECK_IN_API_KEY')
     WORLD_BUILDERS_API_KEY: str = os.getenv('WORLD_BUILDERS_API_KEY')
     WORLD_CHAIN_URL: str = os.getenv('WORLD_CHAIN_URL')
+    WORLD_LOGIN_MESSAGE_HASH: str = os.getenv('WORLD_LOGIN_MESSAGE_HASH')
 
     APPLICATIONS_TABLE_ID: str = os.getenv('APPLICATIONS_TABLE_ID')
 

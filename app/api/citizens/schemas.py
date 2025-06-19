@@ -3,12 +3,15 @@ from typing import List, Optional
 from urllib.parse import unquote
 
 from pydantic import BaseModel, ConfigDict, field_validator, validate_email
+from web3 import Web3
 
 
 class Authenticate(BaseModel):
     email: str
     popup_slug: Optional[str] = None
     use_code: Optional[bool] = False
+    signature: Optional[str] = None
+    world_address: Optional[str] = None
 
     model_config = ConfigDict(
         str_strip_whitespace=True,
@@ -22,6 +25,13 @@ class Authenticate(BaseModel):
             raise ValueError('Email cannot be empty')
         _, email = validate_email(unquote(value))
         return email
+
+    @field_validator('world_address')
+    @classmethod
+    def decode_world_address(cls, value: str) -> str:
+        if not value:
+            return None
+        return Web3.to_checksum_address(value)
 
 
 class CitizenBase(BaseModel):
@@ -63,6 +73,7 @@ class InternalCitizenCreate(CitizenCreate):
     spice: Optional[str] = None
     code: Optional[int] = None
     code_expiration: Optional[datetime] = None
+    world_address: Optional[str] = None
 
 
 class Citizen(CitizenBase):
