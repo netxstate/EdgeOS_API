@@ -87,7 +87,7 @@ class CitizenFilter(BaseModel):
 class PoapClaim(BaseModel):
     attendee_id: int
     attendee_name: str
-    attendee_email: str
+    attendee_email: Optional[str] = None
     attendee_category: str
     poap_url: str
     poap_name: str
