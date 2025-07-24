@@ -31,6 +31,9 @@ def _requested_a_discount(
     if requires_approval:
         return application.scholarship_request
 
+    if application.popup_city.slug == 'edge-patagonia' and application.local_resident:
+        return True
+
     return application.is_renter or application.scholarship_request
 
 
