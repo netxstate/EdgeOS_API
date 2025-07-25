@@ -28,11 +28,11 @@ def _requested_a_discount(
     Determines if a discount has been requested based on the application state.
     Works with both database models (`models.Application`) and schemas (`schemas.Application`).
     """
-    if requires_approval:
-        return application.scholarship_request
-
     if application.popup_city.slug == 'edge-patagonia' and application.local_resident:
         return True
+
+    if requires_approval:
+        return application.scholarship_request
 
     return application.is_renter or application.scholarship_request
 
