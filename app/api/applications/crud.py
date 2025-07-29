@@ -22,28 +22,28 @@ from app.core.utils import current_time
 
 def _requested_a_discount(
     application: Union[models.Application, schemas.Application],
-    requires_approval: bool,
+    popup_city: PopUpCity,
 ) -> bool:
     """
     Determines if a discount has been requested based on the application state.
     Works with both database models (`models.Application`) and schemas (`schemas.Application`).
     """
-    if requires_approval:
-        return application.scholarship_request
-
-    if application.popup_city.slug == 'edge-patagonia' and application.local_resident:
+    if popup_city.slug == 'edge-patagonia' and application.local_resident:
         return True
+
+    if popup_city.requires_approval:
+        return application.scholarship_request
 
     return application.is_renter or application.scholarship_request
 
 
 def calculate_status(
     application: Union[models.Application, schemas.Application],
-    requires_approval: bool,
+    popup_city: PopUpCity,
     reviews_status: Optional[schemas.ApplicationStatus] = None,
 ) -> Tuple[schemas.ApplicationStatus, bool]:
     submitted_at = application.submitted_at
-    requested_a_discount = _requested_a_discount(application, requires_approval)
+    requested_a_discount = _requested_a_discount(application, popup_city)
 
     if reviews_status in [
         schemas.ApplicationStatus.REJECTED,
@@ -53,7 +53,7 @@ def calculate_status(
 
     discount_assigned = getattr(application, 'discount_assigned', None)
     missing_discount = requested_a_discount and discount_assigned is None
-    if not requires_approval and not requested_a_discount:
+    if not popup_city.requires_approval and not requested_a_discount:
         return schemas.ApplicationStatus.ACCEPTED, requested_a_discount
 
     if not reviews_status or missing_discount:
@@ -160,11 +160,13 @@ class CRUDApplication(
         if obj.status != schemas.ApplicationStatus.DRAFT and not group:
             popup_city_id = obj.popup_city_id
             popup = db.query(PopUpCity).filter(PopUpCity.id == popup_city_id).first()
-            requires_approval = popup.requires_approval if popup else False
+            if not popup:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail='Popup city not found',
+                )
 
-            obj.status, obj.requested_discount = calculate_status(
-                obj, requires_approval=requires_approval
-            )
+            obj.status, obj.requested_discount = calculate_status(obj, popup_city=popup)
 
         application = super().create(db, obj)
 
@@ -190,7 +192,7 @@ class CRUDApplication(
         user: TokenData,
     ) -> models.Application:
         application = super().update(db, id, obj, user)
-        requires_approval = application.popup_city.requires_approval
+        popup_city = application.popup_city
 
         if obj.status == schemas.ApplicationStatus.IN_REVIEW:
             if application.submitted_at is None:
@@ -198,12 +200,12 @@ class CRUDApplication(
 
             application.clean_reviews()
             application.status, application.requested_discount = calculate_status(
-                application, requires_approval=requires_approval
+                application, popup_city=popup_city
             )
             if application.status == schemas.ApplicationStatus.IN_REVIEW:
                 _send_application_received_mail(application)
         else:
-            requested_discount = _requested_a_discount(application, requires_approval)
+            requested_discount = _requested_a_discount(application, popup_city)
             application.requested_discount = requested_discount
 
         self.update_citizen_profile(db, application)

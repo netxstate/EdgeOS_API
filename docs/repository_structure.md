@@ -80,8 +80,6 @@ Each API module typically contains:
 Contains automated background tasks and scheduled processes:
 
 - **`auto_approval.py`**: Automated application approval logic
-- **`check_in_emails.py`**: Check-in related email notifications
-- **`goodbye_mails.py`**: Farewell email processes
 - **`send_reminder_emails.py`**: Reminder email scheduling
 - **`send_scheduled_emails.py`**: General scheduled email processing
 

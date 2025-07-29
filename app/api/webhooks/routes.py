@@ -78,7 +78,7 @@ async def update_status_webhook(
         else:
             calculated_status, requested_discount = calculate_status(
                 application,
-                requires_approval=application.popup_city.requires_approval,
+                popup_city=application.popup_city,
                 reviews_status=reviews_status,
             )
 
