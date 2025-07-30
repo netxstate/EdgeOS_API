@@ -34,6 +34,7 @@ async def update_status_webhook(
 ):
     rows_str = json.dumps([row.model_dump() for row in webhook_payload.data.rows])
     fingerprint = f'update_status:{webhook_payload.data.table_id}:{rows_str}'
+    logger.info('Fingerprint: %s', fingerprint)
     if not webhook_cache.add(fingerprint):
         logger.info('Webhook already processed. Skipping...')
         return {'message': 'Webhook already processed'}
