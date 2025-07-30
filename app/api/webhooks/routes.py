@@ -32,8 +32,7 @@ async def update_status_webhook(
     db: Session = Depends(get_db),
     webhook_cache: WebhookCache = Depends(get_webhook_cache),
 ):
-    rows_str = json.dumps([row.model_dump() for row in webhook_payload.data.rows])
-    fingerprint = f'update_status:{webhook_payload.data.table_id}:{rows_str}'
+    fingerprint = f'update_status:{webhook_payload.data.table_id}:{webhook_payload.id}'
     logger.info('Fingerprint: %s', fingerprint)
     if not webhook_cache.add(fingerprint):
         logger.info('Webhook already processed. Skipping...')
