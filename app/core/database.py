@@ -9,9 +9,11 @@ Base = declarative_base()
 
 engine = create_engine(
     settings.DATABASE_URL,
-    # pool_size=10,
-    # max_overflow=20,
-    # pool_timeout=30,
+    pool_size=10,
+    max_overflow=20,
+    pool_timeout=30,
+    pool_recycle=3600,  # Recycle connections every hour
+    pool_pre_ping=True,  # Validate connections before use
 )
 
 # Create a configured "Session" class
