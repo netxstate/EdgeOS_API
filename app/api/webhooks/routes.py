@@ -63,7 +63,7 @@ async def update_status_webhook(
     for row in webhook_payload.data.rows:
         application = db.get(Application, row.id)
         email = application.email
-        logger.info('Processing webhook for application %s %s', application.id, email)
+        logger.info('Processing webhook for application %s %s', row.id, email)
 
         row_dict = row.model_dump()
         reviews_status = row_dict.get('calculated_status')
@@ -86,8 +86,10 @@ async def update_status_webhook(
 
         if current_status == calculated_status:
             logger.info(
-                'Status is the same as calculated status (%s). Skipping...',
+                'Status is the same as calculated status (%s). ID: %s, Email: %s. Skipping...',
                 calculated_status,
+                row.id,
+                email,
             )
             continue
 
