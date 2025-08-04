@@ -82,6 +82,11 @@ class GroupBase(BaseModel):
     updated_at: Optional[datetime] = None
 
 
+class GroupUpdate(BaseModel):
+    description: Optional[str] = None
+    welcome_message: Optional[str] = None
+
+
 class Group(GroupBase):
     id: int
     popup_name: str

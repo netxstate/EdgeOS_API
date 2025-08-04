@@ -156,3 +156,18 @@ def delete_member(
         citizen_id=citizen_id,
         user=current_user,
     )
+
+
+@router.put('/{group_id}', response_model=schemas.Group, status_code=status.HTTP_200_OK)
+def update_group(
+    group_id: int,
+    group: schemas.GroupUpdate,
+    current_user: TokenData = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return group_crud.update_group(
+        db=db,
+        group_id=group_id,
+        group=group,
+        user=current_user,
+    )

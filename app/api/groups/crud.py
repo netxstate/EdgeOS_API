@@ -6,11 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.api.applications.crud import application as applications_crud
 from app.api.applications.models import Application as ApplicationModel
-from app.api.applications.schemas import (
-    Application,
-    ApplicationCreate,
-    ApplicationStatus,
-)
+from app.api.applications.schemas import ApplicationCreate, ApplicationStatus
 from app.api.base_crud import CRUDBase
 from app.api.citizens.crud import citizen as citizens_crud
 from app.api.citizens.schemas import CitizenCreate
@@ -63,6 +59,25 @@ class CRUDGroup(CRUDBase[models.Group, schemas.GroupBase, schemas.GroupBase]):
 
         query = query.order_by(order_by)
         return query.offset(skip).limit(limit).all()
+
+    def update(
+        self,
+        db: Session,
+        group_id: int,
+        obj_in: schemas.GroupUpdate,
+        user: TokenData,
+    ) -> models.Group:
+        group = self.get(db, group_id, user)
+        if not self._check_permission(group, user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='You are not allowed to update this group',
+            )
+        group.description = obj_in.description
+        group.welcome_message = obj_in.welcome_message
+        db.commit()
+        db.refresh(group)
+        return group
 
     def _validate_member_addition(
         self,
