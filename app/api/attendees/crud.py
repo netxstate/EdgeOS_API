@@ -1,5 +1,3 @@
-import random
-import string
 from typing import List, Optional
 
 from fastapi import HTTPException, status
@@ -36,16 +34,6 @@ class CRUDAttendees(
             filters = filters or schemas.AttendeeFilter()
             filters.citizen_id = user.citizen_id
         return super().find(db, skip, limit, filters)
-
-    def create(
-        self,
-        db: Session,
-        obj: schemas.AttendeeCreate,
-        user: TokenData,
-    ) -> models.Attendee:
-        code = ''.join(random.choices(string.ascii_uppercase, k=4))
-        obj.check_in_code = 'EE25' + code
-        return super().create(db, obj, user)
 
     def update(
         self,

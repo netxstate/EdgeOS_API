@@ -1,3 +1,5 @@
+import random
+import string
 from typing import List, Optional, Tuple, Union
 
 from fastapi import HTTPException, status
@@ -251,8 +253,13 @@ class CRUDApplication(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f'Attendee {attendee.email} already exists',
             )
+
+        code = ''.join(random.choices(string.ascii_uppercase, k=4))
+        check_in_code = application.popup_city.prefix + code
         attendee = attendees_schemas.InternalAttendeeCreate(
-            **attendee.model_dump(), application_id=application_id
+            **attendee.model_dump(),
+            application_id=application_id,
+            check_in_code=check_in_code,
         )
         attendee = attendees_crud.create(db, attendee, user)
         return application

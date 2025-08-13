@@ -36,6 +36,7 @@ class PopUpCity(Base):
     )
     name = Column(String, index=True, nullable=False)
     slug = Column(String, index=True, nullable=False, unique=True)
+    prefix = Column(String, nullable=False, unique=True)
     tagline = Column(String)
     location = Column(String)
     passes_description = Column(String)
