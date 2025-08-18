@@ -187,7 +187,7 @@ def _apply_discounts(
         application_id=application.id,
         currency='USD',
         edit_passes=obj.edit_passes,
-        discount_assigned=discount_assigned,
+        discount_value=discount_assigned,
     )
 
     standard_amount, supporter_amount, patreon_amount = _calculate_amounts(
