@@ -2,6 +2,7 @@
 from app.api.applications.models import Application
 from app.api.attendees.models import Attendee
 from app.api.citizens.models import Citizen
+from app.api.email_logs.models import EmailLog
 from app.api.groups.models import Group
 from app.api.organizations.models import Organization
 from app.api.payments.models import Payment, PaymentProduct
@@ -13,6 +14,7 @@ __all__ = [
     'Application',
     'Attendee',
     'Citizen',
+    'EmailLog',
     'Group',
     'Organization',
     'Payment',
