@@ -77,11 +77,10 @@ class GroupBase(BaseModel):
     discount_percentage: float
     popup_city_id: int
     max_members: Optional[int] = None
-    is_ambassador_group: bool = False
     welcome_message: Optional[str] = None
-
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    is_ambassador_group: bool = False
+    ambassador_email: Optional[str] = None
+    ambassador_id: Optional[int] = None
 
 
 class GroupUpdate(BaseModel):
@@ -94,6 +93,9 @@ class Group(GroupBase):
     popup_name: str
     express_checkout_background: Optional[str] = None
     web_url: Optional[str] = None
+
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(
         from_attributes=True,

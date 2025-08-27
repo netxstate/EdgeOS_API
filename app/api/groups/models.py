@@ -1,9 +1,11 @@
+import urllib.parse
 from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, relationship
 
 from app.api.popup_city.models import PopUpCity
+from app.core.config import settings
 from app.core.database import Base
 from app.core.utils import current_time
 
@@ -51,6 +53,8 @@ class Group(Base):
     popup_city_id = Column(Integer, ForeignKey('popups.id'), index=True, nullable=False)
     max_members = Column(Integer)
     is_ambassador_group = Column(Boolean, default=False, nullable=False)
+    ambassador_id = Column(Integer, ForeignKey('humans.id'), nullable=True)
+    ambassador_email = Column(String, nullable=True)
     welcome_message = Column(String, nullable=True)
 
     created_at = Column(DateTime, default=current_time)
@@ -86,3 +90,9 @@ class Group(Base):
 
     def is_leader(self, citizen_id: int) -> bool:
         return any(leader.id == citizen_id for leader in self.leaders)
+
+    def express_checkout_url(self) -> Optional[str]:
+        return urllib.parse.urljoin(
+            settings.FRONTEND_URL,
+            f'/{self.popup_city.slug}/invite/{self.slug}',
+        )

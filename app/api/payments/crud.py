@@ -9,10 +9,10 @@ from app.api.base_crud import CRUDBase
 from app.api.coupon_codes.crud import coupon_code as coupon_code_crud
 from app.api.email_logs.crud import email_log
 from app.api.email_logs.schemas import EmailEvent
-from app.api.payments import models, schemas
+from app.api.payments import schemas
 from app.api.payments.schemas import PaymentSource
 from app.api.products.models import Product
-from app.core import payments_utils
+from app.core import models, payments_utils
 from app.core.logger import logger
 from app.core.security import TokenData
 
@@ -115,7 +115,8 @@ class CRUDPayment(
                 coupon_code_crud.use_coupon_code(db, db_payment.coupon_code_id)
 
             self._add_products_to_attendees(db_payment)
-            self._send_payment_confirmed_email(db_payment)
+            group = self._create_ambassador_group(db, db_payment)
+            self._send_payment_confirmed_email(db_payment, group)
 
         db.commit()
         db.refresh(db_payment)
@@ -145,16 +146,20 @@ class CRUDPayment(
         query = AttendeeProduct.attendee_id.in_(attendees_ids)
         db.query(AttendeeProduct).filter(query).delete(synchronize_session=False)
 
-    def _send_payment_confirmed_email(self, payment: models.Payment) -> None:
+    def _send_payment_confirmed_email(
+        self, payment: models.Payment, group: Optional[models.Group]
+    ) -> None:
         ticket_list = []
         if payment.products_snapshot:
             for product_snapshot in payment.products_snapshot:
                 attendee = product_snapshot.attendee
                 ticket_list.append(f'{product_snapshot.product_name} ({attendee.name})')
 
+        checkout_url = group.express_checkout_url() if group else ''
         params = {
             'ticket_list': ', '.join(ticket_list),
             'first_name': payment.application.first_name,
+            'checkout_url': checkout_url,
         }
         event = EmailEvent.PAYMENT_CONFIRMED.value
         if payment.edit_passes and payment.amount == 0:
@@ -167,6 +172,13 @@ class CRUDPayment(
             entity_type='payment',
             entity_id=payment.id,
         )
+
+    def _create_ambassador_group(
+        self, db: Session, payment: models.Payment
+    ) -> Optional[models.Group]:
+        from app.api.groups.crud import group as group_crud
+
+        return group_crud.create_ambassador_group(db, payment.application)
 
     def approve_payment(
         self,
@@ -201,7 +213,8 @@ class CRUDPayment(
             coupon_code_crud.use_coupon_code(db, payment.coupon_code_id)
 
         self._add_products_to_attendees(payment)
-        self._send_payment_confirmed_email(payment)
+        group = self._create_ambassador_group(db, payment)
+        self._send_payment_confirmed_email(payment, group)
 
         logger.info('Payment %s approved', payment.id)
         db.commit()

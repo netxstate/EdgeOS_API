@@ -1,3 +1,5 @@
+import random
+import string
 from datetime import datetime
 from typing import List, Optional, Union
 
@@ -14,6 +16,10 @@ from app.api.groups import models, schemas
 from app.core.logger import logger
 from app.core.security import SYSTEM_TOKEN, TokenData
 from app.core.utils import current_time
+
+
+def generate_random_string(length: int = 4) -> str:
+    return ''.join(random.choices(string.ascii_lowercase, k=length))
 
 
 class CRUDGroup(CRUDBase[models.Group, schemas.GroupBase, schemas.GroupBase]):
@@ -412,6 +418,53 @@ class CRUDGroup(CRUDBase[models.Group, schemas.GroupBase, schemas.GroupBase]):
         group.products = products
         db.commit()
         db.refresh(group)
+        return group
+
+    def create_ambassador_group(
+        self, db: Session, application: models.Application
+    ) -> Optional[models.Group]:
+        popup_city = application.popup_city
+        if popup_city.slug != 'edge-patagonia':
+            logger.info('Ambassador group not available for this popup city')
+            return None
+
+        existing_group = (
+            db.query(self.model)
+            .filter(
+                self.model.popup_city_id == popup_city.id,
+                self.model.ambassador_id == application.citizen_id,
+            )
+            .first()
+        )
+        if existing_group:
+            logger.info('Ambassador group already exists for %s', application.email)
+            return existing_group
+
+        slug = f'{popup_city.prefix}-{generate_random_string(length=4)}'
+        while db.query(self.model).filter(self.model.slug == slug).first():
+            logger.info('Ambassador group slug already exists: %s', slug)
+            slug = f'{popup_city.prefix}-{generate_random_string(length=4)}'
+
+        description = 'You\'re invited to skip the application process and proceed directly to checkout. Provide your information below to secure your ticket(s) to <a href="https://www.edgecity.live/patagonia" target="_blank" style="color: #3366FF;">Edge Patagonia 2025</a>!'
+        welcome_message = f'This is a personal invite link from {application.first_name} {application.last_name}.'
+
+        group = self.create(
+            db,
+            schemas.GroupBase(
+                name=f'{application.first_name} {application.last_name} Invite List',
+                slug=slug,
+                description=description,
+                discount_percentage=20,
+                popup_city_id=application.popup_city_id,
+                max_members=None,
+                welcome_message=welcome_message,
+                is_ambassador_group=True,
+                ambassador_id=application.citizen_id,
+                ambassador_email=application.email,
+            ),
+            user=SYSTEM_TOKEN,
+        )
+        logger.info('Ambassador group created: %s %s', group.id, group.slug)
         return group
 
 
