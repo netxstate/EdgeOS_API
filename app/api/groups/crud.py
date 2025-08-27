@@ -12,8 +12,7 @@ from app.api.applications.schemas import ApplicationCreate, ApplicationStatus
 from app.api.base_crud import CRUDBase
 from app.api.citizens.crud import citizen as citizens_crud
 from app.api.citizens.schemas import CitizenCreate
-from app.api.groups import schemas
-from app.core import models
+from app.api.groups import models, schemas
 from app.core.logger import logger
 from app.core.security import SYSTEM_TOKEN, TokenData
 from app.core.utils import current_time
@@ -422,7 +421,7 @@ class CRUDGroup(CRUDBase[models.Group, schemas.GroupBase, schemas.GroupBase]):
         return group
 
     def create_ambassador_group(
-        self, db: Session, application: models.Application
+        self, db: Session, application: ApplicationModel
     ) -> Optional[models.Group]:
         popup_city = application.popup_city
         if popup_city.slug != 'edge-patagonia':
@@ -466,6 +465,7 @@ class CRUDGroup(CRUDBase[models.Group, schemas.GroupBase, schemas.GroupBase]):
             user=SYSTEM_TOKEN,
         )
         logger.info('Ambassador group created: %s %s', group.id, group.slug)
+        group.leaders.append(application.citizen)
         return group
 
 
