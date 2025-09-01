@@ -1,3 +1,5 @@
+import csv
+import io
 import random
 import string
 from typing import List, Optional, Tuple, Union
@@ -21,6 +23,49 @@ from app.api.products.models import Product
 from app.core.logger import logger
 from app.core.security import SYSTEM_TOKEN, TokenData
 from app.core.utils import current_time
+
+
+def _generate_attendees_directory_csv(attendees: list[dict]) -> str:
+    """Generate CSV content from attendees directory data."""
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write header
+    writer.writerow(
+        [
+            'First Name',
+            'Last Name',
+            'Email',
+            'Telegram',
+            'Brings Kids',
+            'Role',
+            'Organization',
+            'Participation',
+        ]
+    )
+
+    for attendee in attendees:
+        participation_str = ''
+        if attendee['participation'] != '*' and attendee['participation']:
+            _products = [str(product.name) for product in attendee['participation']]
+            participation_str = ', '.join(_products)
+
+        writer.writerow(
+            [
+                attendee['first_name'],
+                attendee['last_name'],
+                attendee['email'],
+                attendee['telegram'],
+                str(attendee['brings_kids'])
+                if attendee['brings_kids'] != '*'
+                else attendee['brings_kids'],
+                attendee['role'],
+                attendee['organization'],
+                participation_str,
+            ]
+        )
+
+    return output.getvalue()
 
 
 def _requested_a_discount(
@@ -309,8 +354,8 @@ class CRUDApplication(
         db: Session,
         popup_city_id: int,
         filters: Optional[schemas.AttendeesDirectoryFilter],
-        skip: int,
-        limit: int,
+        skip: Optional[int],
+        limit: Optional[int],
         user: TokenData,
     ) -> Tuple[List[dict], int]:
         # Create the ordering expressions
@@ -351,57 +396,45 @@ class CRUDApplication(
             )
         )
 
-        # Apply optional filters
         if filters:
-            if filters.first_name:
+            if filters.q:
+                search_term = f'%{filters.q}%'
                 base_query = base_query.filter(
-                    models.Application.first_name.ilike(f'%{filters.first_name}%')
-                )
-            if filters.last_name:
-                base_query = base_query.filter(
-                    models.Application.last_name.ilike(f'%{filters.last_name}%')
-                )
-            if filters.email:
-                base_query = base_query.filter(
-                    models.Application.email.ilike(f'%{filters.email}%')
-                )
-            if filters.telegram:
-                base_query = base_query.filter(
-                    models.Application.telegram.ilike(f'%{filters.telegram}%')
+                    or_(
+                        models.Application.first_name.ilike(search_term),
+                        models.Application.last_name.ilike(search_term),
+                        models.Application.email.ilike(search_term),
+                        models.Application.telegram.ilike(search_term),
+                        models.Application.role.ilike(search_term),
+                        models.Application.organization.ilike(search_term),
+                    )
                 )
             if filters.brings_kids is not None:
                 base_query = base_query.filter(
                     models.Application.brings_kids.is_(filters.brings_kids)
                 )
-            if filters.role:
-                base_query = base_query.filter(
-                    models.Application.role.ilike(f'%{filters.role}%')
-                )
-            if filters.organization:
-                base_query = base_query.filter(
-                    models.Application.organization.ilike(f'%{filters.organization}%')
-                )
             if filters.participation:
                 # Filter by week numbers extracted from product slugs
                 # Product slugs are in format like "week2-local-spouse", "week3-local-spouse", etc.
-                products_conditions = []
+                products_conditions = [Product.slug.like('%month%')]
                 for week_num in filters.participation:
                     products_conditions.append(Product.slug.like(f'week{week_num}%'))
 
-                products_conditions.append(Product.slug.like('%month%'))
-
-                if products_conditions:
-                    base_query = (
-                        base_query.join(
-                            AttendeeProduct, AttendeeProduct.attendee_id == Attendee.id
-                        )
-                        .join(Product, AttendeeProduct.product_id == Product.id)
-                        .filter(or_(*products_conditions))
-                        .distinct()
+                base_query = (
+                    base_query.join(
+                        AttendeeProduct, AttendeeProduct.attendee_id == Attendee.id
                     )
+                    .join(Product, AttendeeProduct.product_id == Product.id)
+                    .filter(or_(*products_conditions))
+                    .distinct()
+                )
 
         total = base_query.count()
-        query_results = base_query.offset(skip).limit(limit).all()
+        if skip is not None:
+            base_query = base_query.offset(skip)
+        if limit is not None:
+            base_query = base_query.limit(limit)
+        query_results = base_query.all()
 
         attendees = []
         for result in query_results:
@@ -436,6 +469,23 @@ class CRUDApplication(
             attendees.append(a)
 
         return attendees, total
+
+    def get_attendees_directory_csv(
+        self,
+        db: Session,
+        popup_city_id: int,
+        filters: Optional[schemas.AttendeesDirectoryFilter],
+        user: TokenData,
+    ) -> str:
+        attendees, _ = self.get_attendees_directory(
+            db,
+            popup_city_id,
+            filters,
+            skip=None,
+            limit=None,
+            user=user,
+        )
+        return _generate_attendees_directory_csv(attendees)
 
     def delete(self, db: Session, id: int, user: TokenData) -> models.Application:
         """Delete a record."""

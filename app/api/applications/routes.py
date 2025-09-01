@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.applications import schemas
@@ -76,6 +76,29 @@ def get_attendees_directory(
             limit=limit,
             total=total,
         ),
+    )
+
+
+@router.get('/attendees_directory/{popup_city_id}/csv')
+def get_attendees_directory_csv(
+    popup_city_id: int,
+    filters: schemas.AttendeesDirectoryFilter = Depends(),
+    current_user: TokenData = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    logger.info('Getting attendees directory: %s', filters)
+    csv_content = application_crud.get_attendees_directory_csv(
+        db=db,
+        popup_city_id=popup_city_id,
+        filters=filters,
+        user=current_user,
+    )
+    return Response(
+        content=csv_content,
+        media_type='text/csv',
+        headers={
+            'Content-Disposition': 'attachment; filename="attendees_directory.csv"'
+        },
     )
 
 

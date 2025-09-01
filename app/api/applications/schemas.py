@@ -164,13 +164,9 @@ class AttendeesDirectory(BaseModel):
 
 
 class AttendeesDirectoryFilter(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    email: Optional[str] = None
-    telegram: Optional[str] = None
+    # q is a general query that searches in first_name, last_name, email, telegram, role, organization
+    q: Optional[str] = None
     brings_kids: Optional[bool] = None
-    role: Optional[str] = None
-    organization: Optional[str] = None
     participation: Optional[str] = None  # Week numbers comma separated. Example: '2,3'
 
     model_config = ConfigDict(
