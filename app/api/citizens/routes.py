@@ -103,6 +103,20 @@ def get_citizen(
     return citizen_crud.get(db=db, id=citizen_id, user=current_user)
 
 
+@router.put('/me', response_model=schemas.Citizen)
+def update_me(
+    citizen: schemas.CitizenUpdate,
+    current_user: TokenData = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return citizen_crud.update(
+        db=db,
+        id=current_user.citizen_id,
+        obj=citizen,
+        user=current_user,
+    )
+
+
 @router.get('/email/{email}', response_model=schemas.Citizen)
 def get_citizen_by_email(
     email: str,

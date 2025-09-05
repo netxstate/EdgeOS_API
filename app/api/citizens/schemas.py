@@ -59,9 +59,7 @@ class CitizenBase(BaseModel):
     def decode_secondary_email(cls, value: str) -> str:
         return unquote(value) if value else None
 
-    model_config = ConfigDict(
-        str_strip_whitespace=True,
-    )
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class CitizenCreate(CitizenBase):
@@ -79,6 +77,17 @@ class InternalCitizenCreate(CitizenCreate):
     code: Optional[int] = None
     code_expiration: Optional[datetime] = None
     world_address: Optional[str] = None
+
+
+class CitizenUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    x_user: Optional[str] = None
+    telegram: Optional[str] = None
+    gender: Optional[str] = None
+    role: Optional[str] = None
+
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class Citizen(CitizenBase):
