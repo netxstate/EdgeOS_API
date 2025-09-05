@@ -85,6 +85,14 @@ def get_my_poaps(
     return citizen_crud.get_poaps_from_citizen(db=db, user=current_user)
 
 
+@router.get('/profile', response_model=schemas.CitizenProfile)
+def get_profile(
+    db: Session = Depends(get_db),
+    current_user: TokenData = Depends(get_current_user),
+):
+    return citizen_crud.get_profile(db=db, user=current_user)
+
+
 # Get citizen by ID
 @router.get('/{citizen_id}', response_model=schemas.Citizen)
 def get_citizen(

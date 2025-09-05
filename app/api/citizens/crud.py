@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.access_tokens import schemas as access_token_schemas
 from app.api.access_tokens.crud import access_token as access_token_crud
+from app.api.applications.models import Application
 from app.api.base_crud import CRUDBase
 from app.api.citizens import models, schemas
 from app.api.citizens.schemas import CitizenPoaps, CitizenPoapsByPopup, PoapClaim
@@ -284,6 +285,52 @@ class CRUDCitizen(
                 )
 
         return response
+
+    def _get_popup_data(self, application: Application) -> dict:
+        main_attendee = application.get_main_attendee()
+        start_date, end_date = None, None
+        if not main_attendee.products:
+            return None
+
+        for product in main_attendee.products:
+            if not start_date:
+                start_date = product.start_date
+            elif product.start_date:
+                start_date = min(start_date, product.start_date)
+
+            if not end_date:
+                end_date = product.end_date
+            elif product.end_date:
+                end_date = max(end_date, product.end_date)
+
+        total_days = 0
+        if start_date and end_date:
+            total_days = (end_date - start_date).days + 1
+
+        return {
+            'popup_name': application.popup_city.name,
+            'start_date': start_date,
+            'end_date': end_date,
+            'total_days': total_days,
+        }
+
+    def get_profile(self, db: Session, user: TokenData) -> schemas.CitizenProfile:
+        citizen: models.Citizen = self.get(db, user.citizen_id, user)
+        popups_data = []
+        total_days = 0
+        for application in citizen.applications:
+            _popup_data = self._get_popup_data(application)
+            if not _popup_data:
+                continue
+            popups_data.append(_popup_data)
+            total_days += _popup_data['total_days']
+
+        citizen_data = schemas.Citizen.model_validate(citizen).model_dump()
+        return schemas.CitizenProfile(
+            **citizen_data,
+            popups=popups_data,
+            total_days=total_days,
+        )
 
 
 citizen = CRUDCitizen(models.Citizen)

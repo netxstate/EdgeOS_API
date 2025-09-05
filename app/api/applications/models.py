@@ -205,6 +205,11 @@ class Application(Base):
     def get_products(self) -> List['Product']:
         return [product for attendee in self.attendees for product in attendee.products]
 
+    def get_main_attendee(self) -> 'Attendee':
+        for attendee in self.attendees:
+            if attendee.category == 'main':
+                return attendee
+
 
 def setup_relationships():
     from app.api.groups.models import Group

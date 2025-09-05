@@ -90,6 +90,18 @@ class Citizen(CitizenBase):
     )
 
 
+class CitizenPopupData(BaseModel):
+    popup_name: str
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    total_days: int
+
+
+class CitizenProfile(Citizen):
+    popups: List[CitizenPopupData]
+    total_days: int
+
+
 class CitizenFilter(BaseModel):
     id: Optional[int] = None
     primary_email: Optional[str] = None
