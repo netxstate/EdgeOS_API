@@ -312,6 +312,8 @@ class CRUDCitizen(
             'start_date': start_date,
             'end_date': end_date,
             'total_days': total_days,
+            'location': application.popup_city.location,
+            'image_url': application.popup_city.image_url,
         }
 
     def get_profile(self, db: Session, user: TokenData) -> schemas.CitizenProfile:

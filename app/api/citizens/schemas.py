@@ -104,6 +104,8 @@ class CitizenPopupData(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     total_days: int
+    location: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class CitizenProfile(Citizen):
