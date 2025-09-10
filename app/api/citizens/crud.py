@@ -317,6 +317,7 @@ class CRUDCitizen(
         }
 
     def get_profile(self, db: Session, user: TokenData) -> schemas.CitizenProfile:
+        logger.info('Getting profile for citizen: %s', user.citizen_id)
         citizen: models.Citizen = self.get(db, user.citizen_id, user)
         popups_data = []
         total_days = 0
