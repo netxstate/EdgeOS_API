@@ -237,7 +237,7 @@ class CRUDCitizen(
         }
         email_log.send_mail(
             data.email,
-            event=EmailEvent.AUTH_CITIZEN_BY_CODE.value,
+            event=EmailEvent.AUTH_CITIZEN_THIRD_PARTY.value,
             params=params,
             entity_type='citizen',
             entity_id=citizen.id,
