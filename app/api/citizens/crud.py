@@ -238,7 +238,6 @@ class CRUDCitizen(
         email_log.send_mail(
             data.email,
             event=EmailEvent.AUTH_CITIZEN_BY_CODE.value,
-            popup_slug=data.popup_slug,
             params=params,
             entity_type='citizen',
             entity_id=citizen.id,

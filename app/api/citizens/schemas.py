@@ -37,7 +37,6 @@ class Authenticate(BaseModel):
 
 class AuthenticateThirdParty(BaseModel):
     email: str
-    popup_slug: Optional[str] = None
     app_name: str
 
     model_config = ConfigDict(
