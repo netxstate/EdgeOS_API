@@ -478,6 +478,8 @@ class CRUDApplication(
                 'brings_kids': application.brings_kids,
                 'role': application.role,
                 'organization': application.organization,
+                'personal_goals': application.personal_goals,
+                'residence': application.residence,
                 'participation': main_attendee.products,
                 'check_in': check_in,
                 'check_out': check_out,
