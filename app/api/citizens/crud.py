@@ -325,29 +325,31 @@ class CRUDCitizen(
 
     def _get_popup_data(self, application: Application) -> dict:
         main_attendee = application.get_main_attendee()
-        if not main_attendee or not main_attendee.products:
+        if not main_attendee.products:
             return None
 
-        start_date, end_date = None, None
-        for product in main_attendee.products:
-            if not start_date:
-                start_date = product.start_date
-            elif product.start_date:
-                start_date = min(start_date, product.start_date)
-
-            if not end_date:
-                end_date = product.end_date
-            elif product.end_date:
-                end_date = max(end_date, product.end_date)
+        popup = application.popup_city
+        if not main_attendee:
+            if not application.total_days:
+                return None
+            return {
+                'popup_name': popup.name,
+                'start_date': popup.start_date,
+                'end_date': popup.end_date,
+                'total_days': application.total_days,
+                'location': popup.location,
+                'image_url': popup.image_url,
+            }
 
         total_days = 0
-        if start_date and end_date:
-            total_days = (end_date - start_date).days + 1
+        for product in main_attendee.products:
+            if product.start_date and product.end_date:
+                total_days += (product.end_date - product.start_date).days + 1
 
         return {
-            'popup_name': application.popup_city.name,
-            'start_date': start_date,
-            'end_date': end_date,
+            'popup_name': popup.name,
+            'start_date': popup.start_date,
+            'end_date': popup.end_date,
             'total_days': total_days,
             'location': application.popup_city.location,
             'image_url': application.popup_city.image_url,

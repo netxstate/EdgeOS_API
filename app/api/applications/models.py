@@ -82,6 +82,8 @@ class Application(Base):
     scholarship_details = Column(String)
     scholarship_video_url = Column(String)
 
+    total_days = Column(Integer, nullable=True)
+
     _residencies_interested_in = Column('residencies_interested_in', String)
     residencies_text = Column(String)
 
