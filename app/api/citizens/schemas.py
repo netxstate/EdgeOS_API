@@ -64,6 +64,7 @@ class CitizenBase(BaseModel):
     gender: Optional[str] = None
     role: Optional[str] = None
     organization: Optional[str] = None
+    picture_url: Optional[str] = None
 
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -106,6 +107,7 @@ class CitizenUpdate(BaseModel):
     gender: Optional[str] = None
     role: Optional[str] = None
     organization: Optional[str] = None
+    picture_url: Optional[str] = None
 
     model_config = ConfigDict(str_strip_whitespace=True)
 

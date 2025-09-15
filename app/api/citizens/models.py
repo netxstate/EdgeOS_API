@@ -59,6 +59,7 @@ class Citizen(Base):
     eth_address = Column(String)
     world_address = Column(String)
     referral = Column(String)
+    picture_url = Column(String)
 
     email_validated = Column(Boolean, default=False)
     spice = Column(String)
