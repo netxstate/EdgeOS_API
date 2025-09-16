@@ -428,6 +428,13 @@ class CRUDApplication(
                         ),
                     )
                 )
+            if filters.email is not None:
+                base_query = base_query.filter(
+                    and_(
+                        or_(ins.is_(None), not_(ins.ilike('%email%'))),
+                        models.Application.email.ilike(filters.email),
+                    )
+                )
             if filters.brings_kids is not None:
                 base_query = base_query.filter(
                     and_(
