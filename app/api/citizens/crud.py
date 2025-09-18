@@ -367,6 +367,11 @@ class CRUDCitizen(
             _popup_data = self._get_popup_data(application)
             if not _popup_data:
                 continue
+            _popup_data['application'] = {
+                'id': application.id,
+                'residence': application.residence,
+                'personal_goals': application.personal_goals,
+            }
             popups_data.append(_popup_data)
             total_days += _popup_data['total_days']
 

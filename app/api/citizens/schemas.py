@@ -121,6 +121,12 @@ class Citizen(CitizenBase):
     )
 
 
+class ApplicationData(BaseModel):
+    id: int
+    residence: Optional[str] = None
+    personal_goals: Optional[str] = None
+
+
 class CitizenPopupData(BaseModel):
     id: int
     popup_name: str
@@ -129,6 +135,7 @@ class CitizenPopupData(BaseModel):
     total_days: int
     location: Optional[str] = None
     image_url: Optional[str] = None
+    application: Optional[ApplicationData] = None
 
 
 class CitizenProfile(Citizen):
