@@ -173,11 +173,16 @@ class CRUDCitizen(
             data.world_address = None
         
         if not citizen:
+            if data.source == "app":
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail='Citizen not found',
+                )
             to_create = schemas.InternalCitizenCreate(
                 primary_email=data.email,
                 code=code,
                 code_expiration=code_expiration,
-                world_address=data.world_address,
+                world_address=world_address,
             )
             citizen = self.create(db, to_create)
         else:
