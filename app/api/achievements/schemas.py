@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 from app.api.citizens.schemas import Citizen
 
+
 class AchievementBase(BaseModel):
     sender_id: int
     receiver_id: int
@@ -21,9 +22,10 @@ class AchievementCreate(BaseModel):
     achievement_type: str
     message: Optional[str] = None
 
+
 class Achievement(AchievementBase):
     id: int
-    
+
     model_config = ConfigDict(
         from_attributes=True,
     )
@@ -42,7 +44,7 @@ class AchievementWithCitizen(BaseModel):
     achievement: Achievement
     citizen: Citizen
 
+
 class AchievementResponse(BaseModel):
     sent_achievements: List[AchievementWithCitizen]
     received_achievements: List[AchievementWithCitizen]
-

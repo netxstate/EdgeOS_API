@@ -1,8 +1,13 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, relationship
 
 from app.core.database import Base
 from app.core.utils import current_time
+
+if TYPE_CHECKING:
+    from app.api.applications.models import Application
 
 
 class Achievement(Base):
@@ -15,17 +20,19 @@ class Achievement(Base):
         unique=True,
         index=True,
     )
-    sender_id = Column(Integer, ForeignKey('applications.id'), index=True, nullable=False)
-    receiver_id = Column(Integer, ForeignKey('applications.id'), index=True, nullable=False)
+    sender_id = Column(
+        Integer, ForeignKey('applications.id'), index=True, nullable=False
+    )
+    receiver_id = Column(
+        Integer, ForeignKey('applications.id'), index=True, nullable=False
+    )
     achievement_type = Column(String, nullable=False)
     sent_at = Column(DateTime, default=current_time, nullable=False)
-    
+
     # Relationships to Application model
     sender: Mapped['Application'] = relationship(
-        'Application', 
-        foreign_keys=[sender_id]
+        'Application', foreign_keys=[sender_id]
     )
     receiver: Mapped['Application'] = relationship(
-        'Application', 
-        foreign_keys=[receiver_id]
+        'Application', foreign_keys=[receiver_id]
     )

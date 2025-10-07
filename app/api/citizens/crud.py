@@ -160,8 +160,8 @@ class CRUDCitizen(
         code_expiration = (
             current_time() + timedelta(minutes=5) if data.use_code else None
         )
-        world_address = data.model_dump()["world_address"]
-       
+        world_address = data.model_dump()['world_address']
+
         if data.signature and data.world_address:
             if not verify_safe_signature(data.world_address, data.signature):
                 raise HTTPException(
@@ -171,9 +171,9 @@ class CRUDCitizen(
             data.world_redirect = True
         else:
             data.world_address = None
-        
+
         if not citizen:
-            if data.source == "app":
+            if data.source == 'app':
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail='Citizen not found',
@@ -194,7 +194,7 @@ class CRUDCitizen(
 
             if not citizen.world_address and world_address:
                 citizen.world_address = world_address
-            
+
             db.commit()
             db.refresh(citizen)
 

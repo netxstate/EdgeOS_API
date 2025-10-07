@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -11,21 +9,21 @@ from app.core.security import TokenData, get_current_user
 router = APIRouter()
 
 
-@router.post('/', response_model=schemas.Achievement, status_code=status.HTTP_201_CREATED)
+@router.post(
+    '/', response_model=schemas.Achievement, status_code=status.HTTP_201_CREATED
+)
 def create_achievement(
     achievement: schemas.AchievementCreate,
     current_user: TokenData = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-
-    # if current_user.citizen_id == achievement.receiver_id:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail='Sender and receiver cannot be the same',
-    #     )
-    
-   
     """Create a new achievement"""
+    if current_user.citizen_id == achievement.receiver_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Sender and receiver cannot be the same',
+        )
+
     return achievement_crud.create(db=db, obj=achievement, user=current_user)
 
 
