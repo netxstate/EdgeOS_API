@@ -20,8 +20,8 @@ class Achievement(Base):
         unique=True,
         index=True,
     )
-    sender_id = Column(Integer, ForeignKey('citizens.id'), index=True, nullable=False)
-    receiver_id = Column(Integer, ForeignKey('citizens.id'), index=True, nullable=False)
+    sender_id = Column(Integer, ForeignKey('humans.id'), index=True, nullable=False)
+    receiver_id = Column(Integer, ForeignKey('humans.id'), index=True, nullable=False)
     achievement_type = Column(String, nullable=False)
     sent_at = Column(DateTime, default=current_time, nullable=False)
     
