@@ -15,17 +15,17 @@ class Achievement(Base):
         unique=True,
         index=True,
     )
-    sender_id = Column(Integer, ForeignKey('applications.id'), index=True, nullable=False)
-    receiver_id = Column(Integer, ForeignKey('applications.id'), index=True, nullable=False)
+    sender_id = Column(Integer, ForeignKey('citizens.id'), index=True, nullable=False)
+    receiver_id = Column(Integer, ForeignKey('citizens.id'), index=True, nullable=False)
     achievement_type = Column(String, nullable=False)
     sent_at = Column(DateTime, default=current_time, nullable=False)
     
-    # Relationships to Application model
-    sender: Mapped['Application'] = relationship(
-        'Application', 
+    # Relationships to Citizen model
+    sender: Mapped['Citizen'] = relationship(
+        'Citizen', 
         foreign_keys=[sender_id]
     )
-    receiver: Mapped['Application'] = relationship(
-        'Application', 
+    receiver: Mapped['Citizen'] = relationship(
+        'Citizen', 
         foreign_keys=[receiver_id]
     )
