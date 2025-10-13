@@ -200,11 +200,11 @@ class CRUDCitizen(
 
         if code:
             # Choose email event based on source
-            if data.source == "app":
+            if data.source == 'app':
                 event = EmailEvent.AUTH_CITIZEN_APP.value
             else:
                 event = EmailEvent.AUTH_CITIZEN_BY_CODE.value
-            
+
             email_log.send_mail(
                 data.email,
                 event=event,
