@@ -38,9 +38,7 @@ def authenticate(
     # Check if world_address is provided and exists in database
     if not data.email:
         if not data.signature:
-            raise HTTPException(
-                status_code=400, detail='Signature must be provided'
-            )
+            raise HTTPException(status_code=400, detail='Signature must be provided')
 
         if data.source == 'app' and data.world_address:
             if not verify_safe_signature(data.world_address, data.signature):
@@ -53,7 +51,6 @@ def authenticate(
                     db, data.world_address
                 )
                 if existing_citizen_by_world_address:
-                   
                     citizen = citizen_crud.login(
                         db=db,
                         email=existing_citizen_by_world_address.primary_email,
@@ -64,7 +61,8 @@ def authenticate(
                 else:
                     # World address provided but not found in database
                     raise HTTPException(
-                        status_code=404, detail='Citizen with this world address not found'
+                        status_code=404,
+                        detail='Citizen with this world address not found',
                     )
 
     return citizen_crud.authenticate(
