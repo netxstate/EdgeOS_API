@@ -123,6 +123,15 @@ class CRUDCitizen(
     def get_by_email(self, db: Session, email: str) -> Optional[models.Citizen]:
         return db.query(self.model).filter(self.model.primary_email == email).first()
 
+    def get_by_world_address(
+        self, db: Session, world_address: str
+    ) -> Optional[models.Citizen]:
+        return (
+            db.query(self.model)
+            .filter(self.model.world_address == world_address)
+            .first()
+        )
+
     def get_or_create(
         self, db: Session, citizen: schemas.CitizenCreate
     ) -> models.Citizen:
@@ -182,7 +191,6 @@ class CRUDCitizen(
                 primary_email=data.email,
                 code=code,
                 code_expiration=code_expiration,
-           
             )
             citizen = self.create(db, to_create)
         else:

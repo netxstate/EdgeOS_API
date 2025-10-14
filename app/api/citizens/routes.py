@@ -33,6 +33,37 @@ def authenticate(
     db: Session = Depends(get_db),
 ):
     logger.info('Authenticating citizen: %s', data)
+
+    # Check if world_address is provided and exists in database
+    if data.source == 'app' and data.world_address:
+        existing_citizen_by_world_address = citizen_crud.get_by_world_address(
+            db, data.world_address
+        )
+        if existing_citizen_by_world_address:
+            # If world address exists, call login function directly
+            logger.info(
+                'World address found in database, calling login for citizen: %s',
+                existing_citizen_by_world_address.primary_email,
+            )
+            citizen = citizen_crud.login(
+                db=db,
+                email=existing_citizen_by_world_address.primary_email,
+                world_address=data.world_address,
+                spice=existing_citizen_by_world_address.spice,
+            )
+            return citizen.get_authorization()
+        else:
+            # World address provided but not found in database
+            raise HTTPException(
+                status_code=404, detail='Citizen with this world address not found'
+            )
+
+    # If no email is provided and no world_address found, return error
+    if not data.email:
+        raise HTTPException(
+            status_code=400, detail='Either email or world_address must be provided'
+        )
+
     return citizen_crud.authenticate(
         db=db,
         data=data,
@@ -78,8 +109,11 @@ def login(
             status_code=400, detail='Either spice or code must be provided'
         )
 
-    citizen = citizen_crud.login(db=db, email=email, spice=spice, code=code, world_address=world_address)
+    citizen = citizen_crud.login(
+        db=db, email=email, spice=spice, code=code, world_address=world_address
+    )
     return citizen.get_authorization()
+
 
 @router.post('/app-logout')
 def logout(
