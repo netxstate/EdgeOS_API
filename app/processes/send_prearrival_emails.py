@@ -175,7 +175,6 @@ def process_application_for_prearrival(application: Application):
 
     logger.info('Sending pre-arrival email to %s', application.email)
 
-    return
     email_log_crud.send_mail(
         receiver_mail=application.email,
         event=EmailEvent.PRE_ARRIVAL.value,
