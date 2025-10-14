@@ -1,7 +1,7 @@
 from typing import Optional
 from urllib.parse import unquote
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import validate_email
 from pydantic_core import PydanticCustomError
 from sqlalchemy.orm import Session
@@ -14,6 +14,7 @@ from app.api.citizens.crud import citizen as citizen_crud
 from app.core.database import get_db
 from app.core.logger import logger
 from app.core.security import TokenData, get_current_user
+from app.core.world import verify_safe_signature
 
 router = APIRouter()
 
@@ -35,34 +36,36 @@ def authenticate(
     logger.info('Authenticating citizen: %s', data)
 
     # Check if world_address is provided and exists in database
-    if data.source == 'app' and data.world_address:
-        existing_citizen_by_world_address = citizen_crud.get_by_world_address(
-            db, data.world_address
-        )
-        if existing_citizen_by_world_address:
-            # If world address exists, call login function directly
-            logger.info(
-                'World address found in database, calling login for citizen: %s',
-                existing_citizen_by_world_address.primary_email,
-            )
-            citizen = citizen_crud.login(
-                db=db,
-                email=existing_citizen_by_world_address.primary_email,
-                world_address=data.world_address,
-                spice=existing_citizen_by_world_address.spice,
-            )
-            return citizen.get_authorization()
-        else:
-            # World address provided but not found in database
+    if not data.email:
+        if not data.signature:
             raise HTTPException(
-                status_code=404, detail='Citizen with this world address not found'
+                status_code=400, detail='Signature must be provided'
             )
 
-    # If no email is provided and no world_address found, return error
-    if not data.email:
-        raise HTTPException(
-            status_code=400, detail='Either email or world_address must be provided'
-        )
+        if data.source == 'app' and data.world_address:
+            if not verify_safe_signature(data.world_address, data.signature):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail='Invalid signature from app',
+                )
+            else:
+                existing_citizen_by_world_address = citizen_crud.get_by_world_address(
+                    db, data.world_address
+                )
+                if existing_citizen_by_world_address:
+                   
+                    citizen = citizen_crud.login(
+                        db=db,
+                        email=existing_citizen_by_world_address.primary_email,
+                        world_address=data.world_address,
+                        spice=existing_citizen_by_world_address.spice,
+                    )
+                    return citizen.get_authorization()
+                else:
+                    # World address provided but not found in database
+                    raise HTTPException(
+                        status_code=404, detail='Citizen with this world address not found'
+                    )
 
     return citizen_crud.authenticate(
         db=db,
