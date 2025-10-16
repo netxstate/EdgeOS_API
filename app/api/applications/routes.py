@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends, Response, status
-from sqlalchemy.orm import Session
+import csv
+import io
 
-from app.api.applications import schemas
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
+from sqlalchemy.orm import Session
+from app.api.citizens.models import Citizen
+
+from app.api.applications import models, schemas
 from app.api.applications.crud import application as application_crud
 from app.api.attendees import schemas as attendees_schemas
 from app.api.common.schemas import PaginatedResponse, PaginationMetadata
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.logger import logger
 from app.core.security import TokenData, get_current_user
@@ -98,6 +103,52 @@ def get_attendees_directory_csv(
         media_type='text/csv',
         headers={
             'Content-Disposition': 'attachment; filename="attendees_directory.csv"'
+        },
+    )
+
+@router.get('/world-addresses/{popup_city_id}/csv')
+def get_world_addresses_csv(
+    popup_city_id: int,
+    x_api_key: str = Header(...),
+    db: Session = Depends(get_db),
+):
+    """Get all citizens with world addresses from applications in a popup city as CSV
+    
+    Authentication: API key required via X-API-Key header
+    """
+    # Validate API key
+    if x_api_key != settings.API_KEY_WORLD_ADDRESSES:
+        raise HTTPException(status_code=401, detail='Invalid API key')
+    
+    logger.info('Getting citizens with world addresses as CSV for popup city: %s', popup_city_id)
+    applications_with_world_addresses = (
+        db.query(Citizen.world_address)
+        .join(models.Application, models.Application.citizen_id == Citizen.id)
+        .filter(
+            models.Application.popup_city_id == popup_city_id,
+            Citizen.world_address.isnot(None),
+            Citizen.world_address != '',
+        )
+        .all()
+    )
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['World Address'])
+    
+    # Write data rows - only world addresses
+    for (world_address,) in applications_with_world_addresses:
+        writer.writerow([world_address])
+    
+    csv_content = output.getvalue()
+    
+    return Response(
+        content=csv_content,
+        media_type='text/csv',
+        headers={
+            'Content-Disposition': f'attachment; filename="world_addresses_popup_{popup_city_id}.csv"'
         },
     )
 

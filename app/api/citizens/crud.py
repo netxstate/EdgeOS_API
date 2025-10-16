@@ -456,26 +456,5 @@ class CRUDCitizen(
             referral_count=referral_count,
         )
 
-    def get_citizens_with_world_addresses_csv(self, db: Session) -> str:
-        """Get all citizens that have world addresses and return as CSV with only world addresses"""
-        # Query citizens that have a world_address (not null and not empty)
-        citizens = db.query(self.model).filter(
-            self.model.world_address.isnot(None),
-            self.model.world_address != ''
-        ).all()
-        
-        # Create CSV content
-        output = io.StringIO()
-        writer = csv.writer(output)
-        
-        # Write header
-        writer.writerow(['world_address'])
-        
-        # Write data rows - only world addresses
-        for citizen in citizens:
-            writer.writerow([citizen.world_address])
-        
-        return output.getvalue()
-
 
 citizen = CRUDCitizen(models.Citizen)
