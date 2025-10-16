@@ -177,6 +177,7 @@ class AttendeesDirectory(BaseModel):
     residencies_text: Union[Optional[str], Literal['*']]
     participation: Union[Optional[list[Product]], Literal['*']]
     associated_attendees: Union[Optional[list[AttendeeInfo]], Literal['*']]
+    picture_url: Union[Optional[str], Literal['*']]
 
     model_config = ConfigDict(
         str_strip_whitespace=True,

@@ -378,8 +378,10 @@ class CRUDApplication(
                 models.Application,
                 info_not_shared_order,
                 brings_kids_order,
+                CitizenModel.picture_url,
             )
             .join(models.Application.attendees.and_(Attendee.category == 'main'))
+            .join(CitizenModel, CitizenModel.id == models.Application.citizen_id)
             .options(selectinload(models.Application.attendees))
             .filter(
                 models.Application.popup_city_id == popup_city_id,
@@ -466,8 +468,8 @@ class CRUDApplication(
 
         attendees = []
         for result in query_results:
-            # The Application object is the first element
-            application: models.Application = result[0]
+            # Unpack the query results for clarity
+            application, info_not_shared_order, brings_kids_order, picture_url = result
             main_attendee = application.get_main_attendee()
 
             check_in, check_out = None, None
@@ -511,6 +513,7 @@ class CRUDApplication(
                 'participation': main_attendee.products,
                 'check_in': check_in,
                 'check_out': check_out,
+                'picture_url': picture_url,
             }
 
             if application.info_not_shared:
