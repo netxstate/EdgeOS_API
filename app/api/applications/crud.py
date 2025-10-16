@@ -379,6 +379,8 @@ class CRUDApplication(
                 info_not_shared_order,
                 brings_kids_order,
                 CitizenModel.picture_url,
+                CitizenModel.first_name,
+                CitizenModel.last_name,
             )
             .join(models.Application.attendees.and_(Attendee.category == 'main'))
             .join(CitizenModel, CitizenModel.id == models.Application.citizen_id)
@@ -469,7 +471,7 @@ class CRUDApplication(
         attendees = []
         for result in query_results:
             # Unpack the query results for clarity
-            application, info_not_shared_order, brings_kids_order, picture_url = result
+            application, info_not_shared_order, brings_kids_order, picture_url, first_name, last_name = result
             main_attendee = application.get_main_attendee()
 
             check_in, check_out = None, None
@@ -493,8 +495,8 @@ class CRUDApplication(
             a = {
                 'id': application.id,
                 'citizen_id': application.citizen_id,
-                'first_name': application.first_name,
-                'last_name': application.last_name,
+                'first_name': first_name,
+                'last_name': last_name,
                 'email': application.email,
                 'telegram': application.telegram,
                 'brings_kids': application.brings_kids,
