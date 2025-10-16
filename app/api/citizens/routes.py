@@ -11,7 +11,7 @@ from app.api.authorized_third_party_apps.crud import (
 )
 from app.api.citizens import schemas
 from app.api.citizens.crud import citizen as citizen_crud
-from app.core.config import settings
+
 from app.core.database import get_db
 from app.core.logger import logger
 from app.core.security import TokenData, get_current_user
@@ -199,26 +199,3 @@ def get_citizen_by_email(
     return citizen
 
 
-@router.get('/world-addresses/csv')
-def get_world_addresses_csv(
-    x_api_key: str = Header(...),
-    db: Session = Depends(get_db),
-):
-    """Get all citizens with world addresses as CSV
-    
-    Authentication: API key required via X-API-Key header
-    """
-    # Validate API key
-    if x_api_key != settings.API_KEY_WORLD_ADDRESSES:
-        raise HTTPException(status_code=401, detail='Invalid API key')
-    
-    logger.info('Getting citizens with world addresses as CSV')
-    csv_content = citizen_crud.get_citizens_with_world_addresses_csv(db=db)
-    
-    return Response(
-        content=csv_content,
-        media_type='text/csv',
-        headers={
-            'Content-Disposition': 'attachment; filename="citizens_with_world_addresses.csv"'
-        },
-    )
