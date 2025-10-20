@@ -4,6 +4,7 @@ from typing import List, Optional
 import requests
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from app.api.achievements.schemas import BadgeCode
 
 from app.api.achievements import models, schemas
 from app.api.base_crud import CRUDBase
@@ -84,6 +85,29 @@ class CRUDAchievement(
             logger.info('No citizen found or no world_address')
 
         return achievement
+
+    def create_badge(self, db: Session, obj: schemas.AchievementCreate, user: TokenData) -> models.Achievement:
+        """Create a new badge achievement"""
+        # Validate badge_type is provided and valid
+        if obj.badge_type is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='badge_type is required when achievement_type is "badge"',
+            )
+        
+        if obj.badge_type not in [code.value for code in BadgeCode]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Invalid badge_type. Must be one of the valid badge codes.',
+            )
+        else:
+            obj.badge_type = BadgeCode(obj.badge_type).name
+
+        obj_data = obj.model_dump()
+        obj_data['sent_at'] = current_time()
+
+        logger.info(obj_data)
+        return super().create(db=db, obj=schemas.AchievementBase(**obj_data))
 
     def _check_permission(self, db_obj: models.Achievement, user: TokenData) -> bool:
         """Check if user can access this achievement"""

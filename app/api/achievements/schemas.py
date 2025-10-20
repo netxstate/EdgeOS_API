@@ -1,15 +1,24 @@
 from datetime import datetime
 from typing import List, Optional
+from enum import Enum
 
 from pydantic import BaseModel, ConfigDict
 
 from app.api.citizens.schemas import Citizen
 
 
+class BadgeCode(str, Enum):
+    PHYSICAL_SESSIONS = 'UGh5c2ljYWwgU2Vzc2lvbnMC' 
+    MINDFULLNESS_SESSIONS = 'TWluZGZ1bGxuZXNzIFNlc3Npb25z'
+    LAKE_PLUGIN = 'TGFrZSBwbHVnaW4C'
+    SAUNA = 'U2F1bmEC'
+
+
 class AchievementBase(BaseModel):
-    sender_id: int
+    sender_id: Optional[int] = None
     receiver_id: int
     achievement_type: str
+    badge_type: Optional[str] = None
     sent_at: datetime
     message: Optional[str] = None
     model_config = ConfigDict(
@@ -20,7 +29,9 @@ class AchievementBase(BaseModel):
 class AchievementCreate(BaseModel):
     receiver_id: int
     achievement_type: str
+    badge_type: Optional[str] = None
     message: Optional[str] = None
+
 
 
 class Achievement(AchievementBase):
