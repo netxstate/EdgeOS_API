@@ -53,7 +53,7 @@ class AchievementFilter(BaseModel):
 
 class AchievementWithCitizen(BaseModel):
     achievement: Achievement
-    citizen: Citizen
+    citizen: Optional[Citizen] = None
 
 
 class AchievementResponse(BaseModel):
