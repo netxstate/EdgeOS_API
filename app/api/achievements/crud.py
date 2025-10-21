@@ -140,10 +140,10 @@ class CRUDAchievement(
             .all()
         )
 
-        # Get received achievements with sender citizen data
+        # Get received achievements with sender citizen data (using LEFT JOIN to include NULL sender_id)
         received_achievements_with_citizens = (
             db.query(self.model, citizen_models.Citizen)
-            .join(
+            .outerjoin(
                 citizen_models.Citizen,
                 self.model.sender_id == citizen_models.Citizen.id,
             )
@@ -171,16 +171,24 @@ class CRUDAchievement(
         # Structure the received achievements data to include sender info
         received_achievements = []
         for achievement, citizen in received_achievements_with_citizens:
-            achievement_dict = {
-                'achievement': achievement,
-                'citizen': {
-                    'id': citizen.id,
-                    'first_name': citizen.first_name,
-                    'last_name': citizen.last_name,
-                    'primary_email': citizen.primary_email,
-                    'world_address': citizen.world_address,
-                },
-            }
+            if citizen is not None:
+                # Achievement has a sender
+                achievement_dict = {
+                    'achievement': achievement,
+                    'citizen': {
+                        'id': citizen.id,
+                        'first_name': citizen.first_name,
+                        'last_name': citizen.last_name,
+                        'primary_email': citizen.primary_email,
+                        'world_address': citizen.world_address,
+                    },
+                }
+            else:
+                # Achievement has no sender (sender_id is NULL)
+                achievement_dict = {
+                    'achievement': achievement,
+                    'citizen': None,
+                }
             received_achievements.append(achievement_dict)
 
         query = {
