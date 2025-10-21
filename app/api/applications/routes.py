@@ -3,6 +3,7 @@ import io
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from app.api.citizens.models import Citizen
 
 from app.api.applications import models, schemas
@@ -139,15 +140,39 @@ def get_world_addresses_csv(
         limit=limit,
         user=None,
     )
+    print(len(attendees))
     # Extract citizen IDs from attendees
-    citizen_ids = [attendee['citizen_id'] for attendee in attendees]
+    # Collect citizen_ids from all attendees (main + associated) and emails only from associated_attendees
+    citizen_ids_set = set()
+    emails_set = set()
 
-    # Get all world addresses in a single query to avoid N+1 problem
+    for attendee in attendees:
+        # Add main attendee's citizen_id (but not email)
+        citizen_ids_set.add(attendee['citizen_id'])
+        
+        # Add associated attendees' citizen_ids and emails if they exist
+        if attendee.get("associated_attendees"):
+            for associated_attendee in attendee["associated_attendees"]:
+                if associated_attendee.get('citizen_id'):
+                    citizen_ids_set.add(associated_attendee['citizen_id'])
+                if associated_attendee.get('email'):
+                    emails_set.add(associated_attendee['email'])
 
+    # Convert sets back to lists
+    citizen_ids = list(citizen_ids_set)
+    emails = list(emails_set)
+
+    print(f"Unique citizen_ids: {len(citizen_ids)}")
+    print(f"Unique emails (from associated_attendees only): {len(emails)}")
+
+    # Query world addresses using both citizen_id and email
     world_addresses = (
         db.query(Citizen.world_address)
         .filter(
-            Citizen.id.in_(citizen_ids),
+            or_(
+                Citizen.id.in_(citizen_ids),
+                Citizen.primary_email.in_(emails)
+            ),
             Citizen.world_address.isnot(None),
             Citizen.world_address != '',
         )
