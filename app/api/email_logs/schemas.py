@@ -30,6 +30,8 @@ class EmailEvent(str, Enum):
     APPLICATION_APPROVED_NON_SCHOLARSHIP = 'application-approved-nonscholar'
     PRE_ARRIVAL = 'pre-arrival'
     PRE_ARRIVAL_24H = 'pre-arrival-24h'
+    FEEDBACK_REQUEST = 'feedback-request'
+    ACCOUNT_CLUSTER_VERIFICATION = 'account-cluster-verification'
 
 
 class EmailLogFilter(BaseModel):

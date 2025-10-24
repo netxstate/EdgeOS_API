@@ -420,9 +420,21 @@ class CRUDCitizen(
     def get_profile(self, db: Session, user: TokenData) -> schemas.CitizenProfile:
         logger.info('Getting profile for citizen: %s', user.citizen_id)
         citizen: models.Citizen = self.get(db, user.citizen_id, user)
+
+        # Get all linked citizen IDs (includes self)
+        from app.api.account_clusters.crud import get_linked_citizen_ids
+        linked_citizen_ids = get_linked_citizen_ids(db, user.citizen_id)
+        logger.info('Profile aggregating data from citizens: %s', linked_citizen_ids)
+
+        # Aggregate applications from ALL linked citizens
+        from app.api.applications.models import Application
+        all_applications = db.query(Application).filter(
+            Application.citizen_id.in_(linked_citizen_ids)
+        ).all()
+
         popups_data = []
         total_days = 0
-        for application in citizen.applications:
+        for application in all_applications:
             logger.info('Getting popup data for application: %s', application.id)
             _popup_data = self._get_popup_data(application)
             if not _popup_data:
@@ -436,16 +448,23 @@ class CRUDCitizen(
             total_days += _popup_data['total_days']
 
         # Count the amount of attendees with a payment for the ambassador group
+        # Aggregate from ALL linked citizens
+        all_linked_citizens = db.query(models.Citizen).filter(
+            models.Citizen.id.in_(linked_citizen_ids)
+        ).all()
+
         attendee_ids = set()
-        for group in citizen.groups_as_ambassador:
-            for application in group.applications:
-                if application.citizen_id == citizen.id:
-                    continue
-                for payment in application.payments:
-                    if payment.group_id != group.id or payment.status != 'approved':
+        for linked_citizen in all_linked_citizens:
+            for group in linked_citizen.groups_as_ambassador:
+                for application in group.applications:
+                    # Skip if the application belongs to any of the linked citizens
+                    if application.citizen_id in linked_citizen_ids:
                         continue
-                    for product in payment.products_snapshot:
-                        attendee_ids.add(product.attendee_id)
+                    for payment in application.payments:
+                        if payment.group_id != group.id or payment.status != 'approved':
+                            continue
+                        for product in payment.products_snapshot:
+                            attendee_ids.add(product.attendee_id)
 
         referral_count = len(attendee_ids)
         citizen_data = schemas.Citizen.model_validate(citizen).model_dump()
