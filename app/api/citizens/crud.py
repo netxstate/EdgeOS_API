@@ -1,5 +1,3 @@
-import csv
-import io
 import random
 from datetime import timedelta
 from typing import List, Optional, Union
@@ -171,7 +169,6 @@ class CRUDCitizen(
         code_expiration = (
             current_time() + timedelta(minutes=5) if data.use_code else None
         )
-        world_address = data.model_dump()['world_address']
 
         if data.signature and data.world_address:
             if not verify_safe_signature(data.world_address, data.signature):
@@ -462,6 +459,8 @@ class CRUDCitizen(
             .all()
         )
 
+        linked_emails = list({citizen.primary_email for citizen in all_linked_citizens})
+
         attendee_ids = set()
         for linked_citizen in all_linked_citizens:
             for group in linked_citizen.groups_as_ambassador:
@@ -479,6 +478,7 @@ class CRUDCitizen(
         citizen_data = schemas.Citizen.model_validate(citizen).model_dump()
         return schemas.CitizenProfile(
             **citizen_data,
+            linked_emails=linked_emails,
             popups=popups_data,
             total_days=total_days,
             referral_count=referral_count,
