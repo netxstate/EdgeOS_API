@@ -84,9 +84,18 @@ class CRUDAchievement(
         else:
             logger.info('No citizen found or no world_address')
 
+        if obj_data.get('send_telegram_notification'):
+            self.send_telegram_notification(
+                receiver=receiver_citizen,
+                sender=sender_citizen,
+                message=obj_data.get('message', ''),
+            )
+
         return achievement
 
-    def create_badge(self, db: Session, obj: schemas.AchievementCreate, user: TokenData) -> models.Achievement:
+    def create_badge(
+        self, db: Session, obj: schemas.AchievementCreate, user: TokenData
+    ) -> models.Achievement:
         """Create a new badge achievement"""
         # Validate badge_type is provided and valid
         if obj.badge_type is None:
@@ -94,7 +103,7 @@ class CRUDAchievement(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail='badge_type is required when achievement_type is "badge"',
             )
-        
+
         if obj.badge_type not in [code.value for code in BadgeCode]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -245,6 +254,68 @@ class CRUDAchievement(
         response = requests.post(url, headers=headers, json=data)
         logger.info('Notification sent to %s', response.json())
         return response.json()
+
+    def send_telegram_notification(
+        self,
+        receiver: citizen_models.Citizen,
+        sender: citizen_models.Citizen,
+        message: str = '',
+    ) -> dict:
+        """Send a notification via Telegram"""
+        if not settings.TELEGRAM_BOT_TOKEN or not settings.TELEGRAM_CHAT_ID:
+            logger.warning('Telegram bot token or chat ID not configured')
+            return {'status': 'error', 'message': 'Telegram not configured'}
+
+        logger.info(
+            'Sending Telegram notification for achievement from %s to %s',
+            sender.first_name if sender else 'Unknown',
+            receiver.first_name if receiver else 'Unknown',
+        )
+
+        # Build the notification message
+        sender_name = f'{sender.first_name} {sender.last_name}'
+        receiver_name = f'{receiver.first_name} {receiver.last_name}'
+
+        notification_text = f'{sender_name} sent gratitude to {receiver_name} ⭐️'
+
+        if message:
+            notification_text += f'\n\nMessage: {message}'
+
+        # Send the message via Telegram Bot API
+        url = f'https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage'
+        data = {
+            'chat_id': settings.TELEGRAM_CHAT_ID,
+            'text': notification_text,
+        }
+
+        try:
+            response = requests.post(url, json=data, timeout=10)
+            response.raise_for_status()
+            logger.info('Telegram notification sent successfully: %s', response.json())
+            return {'status': 'success', 'response': response.json()}
+        except requests.exceptions.HTTPError as e:
+            error_detail = 'Unknown error'
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_detail = e.response.json()
+                    logger.error(
+                        'Failed to send Telegram notification. Status: %s, Response: %s',
+                        e.response.status_code,
+                        error_detail,
+                    )
+                except:
+                    error_detail = e.response.text
+                    logger.error(
+                        'Failed to send Telegram notification. Status: %s, Response: %s',
+                        e.response.status_code,
+                        error_detail,
+                    )
+            else:
+                logger.error('Failed to send Telegram notification: %s', str(e))
+            return {'status': 'error', 'message': str(e), 'detail': error_detail}
+        except requests.exceptions.RequestException as e:
+            logger.error('Failed to send Telegram notification: %s', str(e))
+            return {'status': 'error', 'message': str(e)}
 
 
 achievement = CRUDAchievement(models.Achievement)

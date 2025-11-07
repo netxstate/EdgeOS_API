@@ -8,7 +8,7 @@ from app.api.citizens.schemas import Citizen
 
 
 class BadgeCode(str, Enum):
-    PHYSICAL_SESSIONS = 'UGh5c2ljYWwgU2Vzc2lvbnMC' 
+    PHYSICAL_SESSIONS = 'UGh5c2ljYWwgU2Vzc2lvbnMC'
     MINDFULLNESS_SESSIONS = 'TWluZGZ1bGxuZXNzIFNlc3Npb25z'
     LAKE_PLUGIN = 'TGFrZSBwbHVnaW4C'
     SAUNA = 'U2F1bmEC'
@@ -31,7 +31,7 @@ class AchievementCreate(BaseModel):
     achievement_type: str
     badge_type: Optional[str] = None
     message: Optional[str] = None
-
+    send_telegram_notification: Optional[bool] = False
 
 
 class Achievement(AchievementBase):

@@ -18,18 +18,14 @@ def create_achievement(
     current_user: TokenData = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Create a new achievement"""
-
-    if achievement.achievement_type == "badge":
+    if achievement.achievement_type == 'badge':
         return achievement_crud.create_badge(db=db, obj=achievement, user=current_user)
-    
-    if current_user.citizen_id == achievement.receiver_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Sender and receiver cannot be the same',
-        )
 
-    
+    # if current_user.citizen_id == achievement.receiver_id:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail='Sender and receiver cannot be the same',
+    #     )
 
     return achievement_crud.create(db=db, obj=achievement, user=current_user)
 
