@@ -87,7 +87,6 @@ class CRUDAchievement(
         self.send_telegram_notification(
             receiver=receiver_citizen,
             sender=sender_citizen,
-            message=obj_data.get('message', ''),
             obj_data=obj_data,
         )
 
@@ -259,7 +258,6 @@ class CRUDAchievement(
         self,
         receiver: citizen_models.Citizen,
         sender: citizen_models.Citizen,
-        message: str = '',
         obj_data: Optional[dict] = None,
     ) -> dict:
         """Send a notification via Telegram"""
@@ -290,9 +288,6 @@ class CRUDAchievement(
             sender_name = f'{sender.first_name} {sender.last_name}'
             receiver_name = f'{receiver.first_name} {receiver.last_name}'
             notification_text = f'{sender_name} sent gratitude to {receiver_name} ⭐️'
-
-        if message:
-            notification_text += f'\n\nMessage: {message}'
 
         logger.info(
             'Sending Telegram notification for achievement from %s to %s',
