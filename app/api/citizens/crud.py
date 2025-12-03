@@ -412,7 +412,7 @@ class CRUDCitizen(
             'popup_name': popup.name,
             'start_date': popup.start_date,
             'end_date': popup.end_date,
-            'total_days': total_days,
+            'total_days': min(total_days, (popup.end_date - popup.start_date).days + 1),
             'location': application.popup_city.location,
             'image_url': application.popup_city.image_url,
         }
