@@ -15,6 +15,7 @@ from app.api.citizens.schemas import CitizenPoaps, CitizenPoapsByPopup, PoapClai
 from app.api.email_logs.crud import email_log
 from app.api.email_logs.schemas import EmailEvent
 from app.core.config import settings
+from app.core.edge_wrapped import generate_edge_wrapped
 from app.core.locks import DistributedLock
 from app.core.logger import logger
 from app.core.security import SYSTEM_TOKEN, TokenData
@@ -483,6 +484,68 @@ class CRUDCitizen(
             total_days=total_days,
             referral_count=referral_count,
         )
+
+    def _get_events_count(self, linked_emails: List[str]) -> int:
+        """Get the count of events attended by a citizen based on their linked emails.
+
+        Args:
+            linked_emails: List of email addresses associated with the citizen
+
+        Returns:
+            Number of events attended, or 0 if query fails
+        """
+        if not linked_emails:
+            return 0
+
+        query = """
+        query Events($where: events_bool_exp) {
+            events(where: $where) {
+                id
+            }
+        }
+        """
+
+        variables = {
+            'where': {'participants': {'profile': {'email': {'_in': linked_emails}}}}
+        }
+
+        try:
+            response = requests.post(
+                settings.HASURA_URL,
+                headers={'Content-Type': 'application/json'},
+                json={'query': query, 'variables': variables},
+                timeout=10,
+            )
+            response.raise_for_status()
+            result = response.json()
+
+            if 'errors' in result:
+                logger.error('Hasura GraphQL error: %s', result['errors'])
+                return 0
+
+            events = result.get('data', {}).get('events', [])
+            return len(events)
+
+        except requests.RequestException as e:
+            logger.error('Failed to fetch events count from Hasura: %s', e)
+            return 0
+        except Exception as e:
+            logger.error('Unexpected error fetching events count: %s', e)
+            return 0
+
+    def get_edge_wrapped(self, db: Session, user: TokenData) -> str:
+        profile = self.get_profile(db, user)
+        popups = [p.popup_name for p in profile.popups]
+
+        events_count = self._get_events_count(profile.linked_emails)
+
+        image_path = generate_edge_wrapped(
+            popups,
+            profile.total_days,
+            events_count,
+        )
+
+        return image_path
 
 
 citizen = CRUDCitizen(models.Citizen)

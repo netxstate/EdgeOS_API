@@ -1,7 +1,17 @@
+import os
 from typing import Optional
 from urllib.parse import unquote
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    HTTPException,
+    Query,
+    status,
+)
+from fastapi.responses import FileResponse
 from pydantic import validate_email
 from pydantic_core import PydanticCustomError
 from sqlalchemy.orm import Session
@@ -162,6 +172,22 @@ def get_profile(
     current_user: TokenData = Depends(get_current_user),
 ):
     return citizen_crud.get_profile(db=db, user=current_user)
+
+
+@router.get('/edge-wrapped')
+def get_edge_wrapped(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: TokenData = Depends(get_current_user),
+):
+    image_path = citizen_crud.get_edge_wrapped(db=db, user=current_user)
+    background_tasks.add_task(os.remove, image_path)
+
+    return FileResponse(
+        image_path,
+        media_type='image/png',
+        headers={'Content-Disposition': 'inline; filename="edge-wrapped.png"'},
+    )
 
 
 # Get citizen by ID
