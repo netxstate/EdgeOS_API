@@ -468,18 +468,19 @@ def generate_edge_mapped(
 ) -> str:
     popups_map = [
         # Name, Code
+        ('Esmeralda 2024', 'CA'),
+        ('Lanna', 'TH'),
         ('Austin', 'AU'),
         ('South Africa', 'SA'),
-        ('Patagonia', 'AR'),
-        ('Lanna', 'TH'),
-        ('Esmeralda', 'CA'),
+        ('Esmeralda 2025', 'CA'),
         ('Bhutan', 'BH'),
+        ('Patagonia', 'AR'),
     ]
 
     locations = set()
     codes = set()
-    for popup in popups:
-        for name, code in popups_map:
+    for name, code in popups_map:
+        for popup in popups:
             if name.lower() in popup.lower():
                 locations.add(name)
                 codes.add(code)
@@ -493,7 +494,7 @@ def generate_edge_mapped(
         villages_count,
         days_count,
         events_count,
-        locations,
+        list(locations),
     )
     os.remove(intermediate_output)
     return final_output
