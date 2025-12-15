@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.access_tokens import schemas as access_token_schemas
 from app.api.access_tokens.crud import access_token as access_token_crud
+from app.api.account_clusters.crud import get_linked_citizen_ids
 from app.api.applications.models import Application
 from app.api.base_crud import CRUDBase
 from app.api.citizens import models, schemas
@@ -338,8 +339,21 @@ class CRUDCitizen(
 
     def get_poaps_from_citizen(self, db: Session, user: TokenData) -> CitizenPoaps:
         citizen: models.Citizen = self.get(db, user.citizen_id, user)
+
+        linked_citizen_ids = get_linked_citizen_ids(db, citizen.id)
+        logger.info('Getting POAPs from citizens: %s', linked_citizen_ids)
+
+        # Aggregate applications from ALL linked citizens
+        from app.api.applications.models import Application
+
+        all_applications = (
+            db.query(Application)
+            .filter(Application.citizen_id.in_(linked_citizen_ids))
+            .all()
+        )
+
         response = CitizenPoaps(results=[])
-        for application in citizen.applications:
+        for application in all_applications:
             poaps = []
             for attendee in application.attendees:
                 if attendee.poap_url:
@@ -440,9 +454,6 @@ class CRUDCitizen(
             cached_profile.edge_mapped_sent = citizen.edge_mapped_sent
             return citizen, cached_profile
 
-        # Get all linked citizen IDs (includes self)
-        from app.api.account_clusters.crud import get_linked_citizen_ids
-
         linked_citizen_ids = get_linked_citizen_ids(db, user.citizen_id)
         logger.info('Profile aggregating data from citizens: %s', linked_citizen_ids)
 
@@ -456,7 +467,6 @@ class CRUDCitizen(
         )
 
         popups_data = {}
-        total_days = 0
         for application in all_applications:
             logger.info('Getting popup data for application: %s', application.id)
             _popup_data = self._get_popup_data(application)
@@ -474,9 +484,10 @@ class CRUDCitizen(
                 'personal_goals': application.personal_goals,
             }
             popups_data[_popup_data['id']] = _popup_data
-            total_days += _popup_data['total_days']
 
         popups_data = list(popups_data.values())
+        total_days = sum(popup['total_days'] for popup in popups_data)
+
         # Count the amount of attendees with a payment for the ambassador group
         # Aggregate from ALL linked citizens
         all_linked_citizens = (
