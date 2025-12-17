@@ -478,14 +478,15 @@ def generate_edge_mapped(
         ('Patagonia', 'AR'),
     ]
 
-    locations = set()
-    codes = set()
+    locations = []
+    codes = []
     for name, code in popups_map:
         for popup in popups:
             if name.lower() in popup.lower():
-                locations.add(name)
-                codes.add(code)
-                break
+                if name not in locations:
+                    locations.append(name)
+                if code not in codes:
+                    codes.append(code)
 
     if not codes or not locations:
         raise HTTPException(
@@ -495,12 +496,19 @@ def generate_edge_mapped(
     villages_count = len(locations)
     ai_image_path = _get_ai_image(codes)
 
+    if 'Austin' in locations:
+        events_count += 8
+    if 'South Africa' in locations:
+        events_count += 12
+    if 'Bhutan' in locations:
+        events_count += 10
+
     intermediate_output, final_output = _generate_edge_mapped(
         ai_image_path,
         villages_count,
         days_count,
         events_count,
-        list(locations),
+        locations,
     )
     os.remove(intermediate_output)
     return final_output
