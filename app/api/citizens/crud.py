@@ -465,16 +465,17 @@ class CRUDCitizen(
     ) -> tuple[models.Citizen, schemas.CitizenProfile]:
         logger.info('Getting profile for citizen: %s', user.citizen_id)
         citizen: models.Citizen = self.get(db, user.citizen_id, user)
-        # Check cache first
-        cache_key = f'citizen_profile:{user.citizen_id}'
-        cached_profile: Optional[schemas.CitizenProfile] = PROFILE_CACHE.get(cache_key)
-        if cached_profile:
-            logger.info('Returning cached profile for citizen: %s', user.citizen_id)
-            cached_profile.edge_mapped_sent = citizen.edge_mapped_sent
-            return citizen, cached_profile
 
         linked_citizen_ids = get_linked_citizen_ids(db, user.citizen_id)
         logger.info('Profile aggregating data from citizens: %s', linked_citizen_ids)
+
+        # Check cache first
+        cache_key = f'citizen_profile:{user.citizen_id}'
+        cached_p: Optional[schemas.CitizenProfile] = PROFILE_CACHE.get(cache_key)
+        if cached_p and len(cached_p.linked_emails) == len(linked_citizen_ids):
+            logger.info('Returning cached profile for citizen: %s', user.citizen_id)
+            cached_p.edge_mapped_sent = citizen.edge_mapped_sent
+            return citizen, cached_p
 
         # Aggregate applications from ALL linked citizens
         from app.api.applications.models import Application
