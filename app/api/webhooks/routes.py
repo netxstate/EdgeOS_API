@@ -14,6 +14,7 @@ from app.api.payments.crud import payment as payment_crud
 from app.api.payments.schemas import PaymentFilter, PaymentUpdate
 from app.api.webhooks import schemas
 from app.api.webhooks.dependencies import get_webhook_cache
+from app.core import ai_scoring
 from app.core.cache import WebhookCache
 from app.core.config import settings
 from app.core.database import get_db
@@ -82,6 +83,17 @@ async def update_status_webhook(
                 popup_city=application.popup_city,
                 reviews_status=reviews_status,
             )
+
+        if (
+            calculated_status == ApplicationStatus.IN_REVIEW
+            and application.ai_review is None
+        ):
+            ai_review = ai_scoring.review_application(application)
+            if ai_review:
+                application.ai_review = ai_review
+                db.add(application)
+                db.commit()
+                db.refresh(application)
 
         if current_status == calculated_status:
             logger.info(
