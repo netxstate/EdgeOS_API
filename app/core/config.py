@@ -68,5 +68,7 @@ class Settings:
 
     HASURA_URL: str = os.getenv('HASURA_URL')
 
+    GEMINI_API_KEY: str = os.getenv('GEMINI_API_KEY')
+
 
 settings = Settings()

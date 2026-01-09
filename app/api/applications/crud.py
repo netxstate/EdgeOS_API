@@ -20,6 +20,7 @@ from app.api.email_logs.schemas import EmailEvent
 from app.api.organizations.crud import organization as organization_crud
 from app.api.popup_city.models import PopUpCity
 from app.api.products.models import Product
+from app.core.ai_scoring import review_application
 from app.core.logger import logger
 from app.core.security import SYSTEM_TOKEN, TokenData
 from app.core.utils import current_time
@@ -225,6 +226,11 @@ class CRUDApplication(
 
         if application.status == schemas.ApplicationStatus.IN_REVIEW:
             _send_application_received_mail(application)
+            # Review the application using AI
+            application.ai_review = review_application(application)
+            db.add(application)
+            db.commit()
+            db.refresh(application)
 
         self.update_citizen_profile(db, application)
         return application
@@ -249,6 +255,8 @@ class CRUDApplication(
             )
             if application.status == schemas.ApplicationStatus.IN_REVIEW:
                 _send_application_received_mail(application)
+                # Review the application using AI
+                application.ai_review = review_application(application)
         else:
             requested_discount = _requested_a_discount(application, popup_city)
             application.requested_discount = requested_discount

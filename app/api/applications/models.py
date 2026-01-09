@@ -99,6 +99,8 @@ class Application(Base):
     auto_approved = Column(Boolean, nullable=False, default=False)
     not_attending = Column(Boolean, nullable=False, default=False)
 
+    ai_review = Column(String, nullable=True)
+
     credit = Column(Float, default=0, nullable=False)
 
     submitted_at = Column(DateTime, nullable=True)

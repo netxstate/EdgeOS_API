@@ -60,6 +60,7 @@ class PopUpCity(Base):
     portal_order = Column(Float, nullable=False, default=0)
     simplefi_api_key = Column(String)
     applications_imported = Column(Boolean, nullable=False, default=False)
+    ai_review_prompt = Column(String)
 
     templates: Mapped[List[EmailTemplate]] = relationship(
         'EmailTemplate', back_populates='popup_city'
