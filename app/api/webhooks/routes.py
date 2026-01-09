@@ -86,7 +86,7 @@ async def update_status_webhook(
 
         if (
             calculated_status == ApplicationStatus.IN_REVIEW
-            and application.ai_review is None
+            and not application.ai_review
         ):
             ai_review = ai_scoring.review_application(application)
             if ai_review:
