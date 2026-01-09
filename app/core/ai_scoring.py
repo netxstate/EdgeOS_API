@@ -74,16 +74,9 @@ def review_application(application: Application) -> str | None:
 
         review_text = response.text.strip()
 
-        logger.info(
-            'AI reviewed application %d',
-            application.id,
-        )
+        logger.info('AI reviewed application %d', application.id)
         return review_text
 
     except Exception as e:
-        logger.error(
-            'Error reviewing application %d with AI: %s',
-            application.id,
-            e,
-        )
+        logger.error('Error reviewing application %d with AI: %s', application.id, e)
         return None
