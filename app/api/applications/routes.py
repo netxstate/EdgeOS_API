@@ -1,7 +1,12 @@
-import csv
-import io
-
-from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    HTTPException,
+    Response,
+    status,
+)
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from app.api.citizens.models import Citizen
@@ -196,6 +201,7 @@ def get_application(
 def update_application(
     application_id: int,
     application: schemas.ApplicationUpdate,
+    background_tasks: BackgroundTasks,
     current_user: TokenData = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -205,6 +211,7 @@ def update_application(
         id=application_id,
         obj=application,
         user=current_user,
+        background_tasks=background_tasks,
     )
 
 

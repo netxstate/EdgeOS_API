@@ -4,7 +4,7 @@ import random
 import string
 from typing import List, Optional, Tuple, Union
 
-from fastapi import HTTPException, status
+from fastapi import BackgroundTasks, HTTPException, status
 from sqlalchemy import and_, case, desc, exists, not_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
@@ -120,6 +120,17 @@ def _send_application_received_mail(application: models.Application):
         entity_type='application',
         entity_id=application.id,
     )
+
+
+def _run_ai_review_background(application_id: int):
+    """Background task to run AI review and update the application."""
+    from app.core.database import SessionLocal
+
+    with SessionLocal() as db:
+        application = db.query(models.Application).get(application_id)
+        if application:
+            application.ai_review = review_application(application)
+            db.commit()
 
 
 class CRUDApplication(
@@ -241,6 +252,7 @@ class CRUDApplication(
         id: int,
         obj: schemas.ApplicationUpdate,
         user: TokenData,
+        background_tasks: BackgroundTasks,
     ) -> models.Application:
         application = super().update(db, id, obj, user)
         popup_city = application.popup_city
@@ -255,8 +267,8 @@ class CRUDApplication(
             )
             if application.status == schemas.ApplicationStatus.IN_REVIEW:
                 _send_application_received_mail(application)
-                # Review the application using AI
-                application.ai_review = review_application(application)
+                # Schedule AI review in background
+                background_tasks.add_task(_run_ai_review_background, application.id)
         else:
             requested_discount = _requested_a_discount(application, popup_city)
             application.requested_discount = requested_discount
