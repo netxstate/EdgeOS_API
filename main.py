@@ -31,6 +31,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, version='0.1.1')
 
+# Configure CORS - must be added before routers
+origins = ['*']
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+    expose_headers=['*'],
+)
+
 # Include routers
 app.include_router(
     account_clusters_router, prefix='/account-clusters', tags=['Account Clusters']
@@ -51,15 +62,6 @@ app.include_router(products_router, prefix='/products', tags=['Products'])
 app.include_router(webhooks_router, prefix='/webhooks', tags=['Webhooks'])
 app.include_router(
     world_builders_router, prefix='/world-builders', tags=['World Builders']
-)
-
-origins = ['*']
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
 )
 
 
