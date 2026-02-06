@@ -2,10 +2,10 @@ version: "3.8"
 services:
   nocodb:
     depends_on:
-      postgres:
+      edge_os_postgres:
         condition: service_healthy
     environment:
-      NC_DB: "pg://postgres:${DB_PORT}?u=${DB_USERNAME}&p=${DB_PASSWORD}&d=${NOCO_DB_NAME}"
+      NC_DB: "pg://edge_os_postgres:${DB_PORT}?u=${DB_USERNAME}&p=${DB_PASSWORD}&d=${NOCO_DB_NAME}"
     image: "nocodb/nocodb:latest"
     ports:
       - "9090:8080"
@@ -24,7 +24,7 @@ services:
     volumes:
       - .:/usr/src/app
     depends_on:
-      postgres:
+      edge_os_postgres:
         condition: service_healthy
     command: "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 
@@ -35,7 +35,7 @@ services:
     volumes:
       - .:/usr/src/app
     depends_on:
-      postgres:
+      edge_os_postgres:
         condition: service_healthy
     command: "python app/processes/send_scheduled_emails.py"
     restart: always
@@ -47,7 +47,7 @@ services:
     volumes:
       - .:/usr/src/app
     depends_on:
-      postgres:
+      edge_os_postgres:
         condition: service_healthy
     command: "python app/processes/send_reminder_emails.py"
     restart: always
@@ -59,12 +59,12 @@ services:
     volumes:
       - .:/usr/src/app
     depends_on:
-      postgres:
+      edge_os_postgres:
         condition: service_healthy
     command: "python app/processes/auto_approval.py"
     restart: always
 
-  postgres:
+  edge_os_postgres:
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
