@@ -11,7 +11,7 @@ services:
       - "9090:8080"
     restart: always
     volumes:
-      - "nc_data:/usr/app/data"
+      - "ncdata:/usr/app/data"
     env_file:
       - .env
 
@@ -79,9 +79,9 @@ services:
     ports:
       - "9092:5432"
     volumes:
-      - "db_data:/var/lib/postgresql/data"
+      - "dbdata:/var/lib/postgresql/data"
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
 volumes:
-  db_data: {}
-  nc_data: {}
+  dbdata: {}
+  ncdata: {}
