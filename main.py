@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan, version='0.1.1')
+app = FastAPI(lifespan=lifespan, version='0.1.1', redirect_slashes=False)
 
 # Configure CORS - must be added before routers
 origins = ['*']
